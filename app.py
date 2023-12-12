@@ -733,20 +733,22 @@ def getHistoricalData(conid: str, exchange=None, period=None,
     print(response.text)
 
 
-def getOptionStrikes(conid, month, exchange=None):
+def getOptionStrikes(conid, month, exchange=None, secType=None):
     url = "/iserver/secdef/strikes"
-    params = {"conid": conid, "sectype": "OPT", "month": month,
+    params = {"conid": conid, "sectype": "OPT" if secType is None else secType
+            , "month": month,
             "exchange": '' if exchange == None else exchange}
     response = requests.get(base_url + url, params=params, verify=False)
     jsonData = json.loads(response.text)
     return jsonData
 
-def testOptionsContrac(conid, month, right, strike, exchange):
+def testOptionsContrac(conid, month, right, strike, exchange=None, secType=None):
     url = "/iserver/secdef/info"
     params = {
             "conid": conid,
+            "secType": "OPT" if secType is None else secType, 
             "month": month,
-            "exchange": 'SMART',
+            "exchange": 'SMART' if exchange == None else exchange,
             "strike": strike,
             "right": right 
             }
@@ -754,13 +756,13 @@ def testOptionsContrac(conid, month, right, strike, exchange):
     print(response.text)
 
 
-def getOptionsContract(conid, month, right, strike, exchange=None):
+def getOptionsContract(conid, month, right, strike, exchange=None, sectype=None):
     # Test what values are not required - sectype can be ommitted, for example.
     url = "/iserver/secdef/info"
     params = {
             "conid": conid,
             "month": month,
-            "sectype": "OPT", 
+            "sectype": "OPT" if sectype is None else sectype, 
             "exchange": 'SMART' if exchange is None else exchange,
             "strike": strike,
             "right": right 
@@ -911,9 +913,31 @@ def testExpiredFOPHistoricalData():
             outsideRth=False
             )
 
+def getFOPcontracts():
+    details = searchBySymbol("ES", "STK")
+    sections = details['sections']
+    for s in sections:
+        if s['secType'] == "FOP":
+            fopMonths = s['months']
+            print(fopMonths)
+            for m in fopMonths:
+                strikesPerMonth = getOptionStrikes(conid=details['conid'], month=m, exchange="CME", 
+                        secType="FOP")
+                for s in strikesPerMonth['call']:
+                    print(s)
+                    testOptionsContrac(conid=details['conid'], right='C',
+                            month=m, strike=s, exchange="CME", secType="FOP")
+
+                for s in strikesPerMonth['put']:
+                    print(s)
+                    testOptionsContrac(conid=details['conid'], right='P',
+                            month=m, strike=s, exchange="CME", secType="FOP")
+            break
+        else:
+            print('Not FOP :(')
 def main():
     checkAuthStatus()
-    testHistoricalData()
+    getFOPcontracts()
     
 
 
