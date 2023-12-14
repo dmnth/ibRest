@@ -559,6 +559,7 @@ def historicalData(conid, exchange, period, bar, outsideRth, startTime):
             }
 
     response = requests.get(base_url + '/iserver/marketdata/history', params=params, verify=False)
+    print(response.status_code)
     print(response.text)
 
 def urllLibhistoricalData(conid, exchange, period, bar, outsideRth, startTime): 
@@ -935,9 +936,13 @@ def getFOPcontracts():
             break
         else:
             print('Not FOP :(')
+
 def main():
     checkAuthStatus()
-    getFOPcontracts()
+
+    accId = getAccounts()[0]
+    print(accId)
+    historicalData(conid=4036812, period='1h', bar='1m',outsideRth=True, exchange='', startTime='20221212-00:00:00')
     
 
 
