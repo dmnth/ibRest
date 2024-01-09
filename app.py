@@ -25,6 +25,7 @@ sslContext.verify_mode = ssl.CERT_NONE
 requests.packages.urllib3.disable_warnings()
 
 local_ip = "127.0.0.1:5000"
+#local_ip = "192.168.43.215:5000"
 base_url = f"https://{local_ip}/v1/api"
 headers = {
         "User-Agent": "python-requests/2.28.1",
@@ -33,6 +34,9 @@ headers = {
         "Connection": "keep-alive",
         "Content-type": "application/json"
         }
+
+def saveOrderRecord(orderJson):
+    return
 
 def stocksBySymbol(symbol):
     endpoint = base_url + f"/trsrv/stocks"
@@ -43,17 +47,16 @@ def stocksBySymbol(symbol):
     jsonData = json.loads(response.text)
     return jsonData
 
-def snapShotDataSubscribe(conIds: str, fields: str):
+def snapShotDataSubscribe(conIds: str, fields: str, since):
     endpoint = base_url + "/iserver/marketdata/snapshot"
-    conIds = conIds.split(',')
-#    fields = fields.split(',')
     data = {
             "conids": conIds,
-            "fields": fields
+            "fields": fields,
+            "since": since
             }
     response = requests.get(endpoint, verify=False, params=data, headers=headers)
-    print(response.text)
-    return
+    jsonData = json.loads(response.text)
+    return jsonData
 
 def snapShotDataUnsubscribe(conid):
     endpoint = base_url + f"/iserver/marketdata/{conid}/unsubscribe"
@@ -62,7 +65,14 @@ def snapShotDataUnsubscribe(conid):
     if response.status_code == 200:
         print(response.text)
     else:
-        print(response.status_code, ", shit")
+        print(response.status_code, ", fail")
+
+def unsubscribeAll():
+    endpoint = base_url + f"/iserver/marketdata/unsubscribeall"
+    response = requests.get(endpoint, verify=False, headers=headers)
+    if response.status_code == 200:
+        print("Unsubscribe all: ", response.text)
+
 
 def futuresContractPerSymbol(symbol: str):
     endpoint = "/trsrv/futures"
@@ -149,7 +159,10 @@ def checkAuthStatus():
             raise Exception("Unauthorized, please login via web interface")
 
 def accountTrades():
-    resp = requests.get(base_url + "/iserver/account/trades", verify=False,
+    data = {
+            "days": 1
+            }
+    resp = requests.get(base_url + "/iserver/account/trades", params=data, verify=False,
             headers=headers)
     jsonData = json.loads(resp.text)
     with open('trades.json', 'w') as outfile:
@@ -469,10 +482,11 @@ def placesFutOrders(symbol):
     for p in payloads:
         messages = placeOrder(accountId, p)
 
-def getLiveOrders():
+def getLiveOrderIds():
     endpoint = base_url + "/iserver/account/orders"
     response = requests.get(endpoint, verify=False, headers=headers)
     jsonData = json.loads(response.text)
+    print('Orders response ----> \n  ', jsonData)
     if 'error' in jsonData.keys():
         print(jsonData['error'])
         return
@@ -482,9 +496,32 @@ def getLiveOrders():
 
     return orderIds
 
+def getLiveOrders():
+    endpoint = base_url + "/iserver/account/orders"
+    response = requests.get(endpoint, verify=False, headers=headers)
+    jsonData = json.loads(response.text)
+    print('Orders response ----> \n  ', jsonData)
+    if 'error' in jsonData.keys():
+        print(jsonData['error'])
+        return
+    return jsonData 
+
+def getOrderRefs():
+    orders = getLiveOrders()
+    trades = accountTrades() 
+    print(trades)
+    return
+    for el in orders['orders']:
+        try:
+            print(f"{el['orderId']} -> {el['order_ref']}")
+            # Check if order_ref is in trades:
+        except KeyError:
+            print(str(el['orderId']) + ' has no cOID assigned')
+            continue
+
 def retrieveOrderStatuses():
 
-    orders = getLiveOrders()
+    orders = getLiveOrderIds()
     for orderId in orders:
         status = checkOrderStatus(orderId)
         with open('orderStatuses.json', 'a') as outfile:
@@ -538,7 +575,7 @@ def cancelOrder(accountID, orderID):
 
 def cancelAllOrders():
     # to cancel all orders send -1 as ID value
-    orderIds = getLiveOrders()
+    orderIds = getLiveOrderIds()
     accId = getAccounts()[0]
 #    cancelOrder(accId, orderIds)
 
@@ -866,14 +903,14 @@ def calculatePnlPerTrade(stockSymbol: str, identifier: int):
     print(endPnl, startPnl, netRealizedPnl)
 
 def liveOrdersDontUpdateTest():
-    orders = getLiveOrders()
+    orders = getLiveOrderIds()
     print("Initial amount: ", len(orders))
     placeSingleOrder("GOOG", "SMART", "SELL", "MKT", "DAY", False, 1, price="", orderRef="")
     placeSingleOrder("GOOG", "SMART", "SELL", "MKT", "DAY", False, 1, price="", orderRef="")
-    orders = getLiveOrders()
+    orders = getLiveOrderIds()
     print("After two orders were placed: ", len(orders))
     placeSingleOrder("GOOG", "SMART", "SELL", "MKT", "DAY", False, 1, price="", orderRef="")
-    orders = getLiveOrders()
+    orders = getLiveOrderIds()
     print("One more order was placed: ", len(orders))
     cancelAllOrders()
 
@@ -889,11 +926,11 @@ def testOrderCancel():
     placeSingleOrder("GOOG", "SMART", "SELL", "MKT", "DAY", False, 1, price="", orderRef="")
     placeSingleOrder("BMW", "SMART", "SELL", "MKT", "DAY", False, 1, price="", orderRef="")
     placeSingleOrder("BMW", "SMART", "SELL", "MKT", "DAY", False, 1, price="", orderRef="")
-    getLiveOrders()
+    getLiveOrderIds()
     cancelAllOrders()
     print("here")
     time.sleep(5)
-    getLiveOrders()
+    getLiveOrderIds()
 
 def testTsrvFutures():
     symbols = ['NG', 'SI', 'GD']
@@ -937,16 +974,49 @@ def getFOPcontracts():
         else:
             print('Not FOP :(')
 
+def checkSnapshotData(conid, fields, since):
+    #unsubscribe
+    unsubscribeAll()
+    snapShotDataSubscribe(conid, fields, since)
+    try:
+        while True:
+            data = snapShotDataSubscribe(conid, fields, since)
+            print("Data: ", data)
+            if 'error' in data[0].keys():
+                getAccounts()
+            try:
+                quotes = {
+                        'bidPrice': data[0]['84'],
+                        'askSize': data[0]['85'],
+                        'askPrice': data[0]['86'],
+                        'bidSize': data[0]['88']
+                        }
+                print(quotes)
+            except KeyError as err:
+                print("Absent value: ", err)
+
+                continue 
+            sleep(1)
+    except KeyboardInterrupt:
+        #unsubscribe
+        sys.exit()
+
+def helperFunction():
+    trades = accountTrades()
+    orderIds = []
+    for el in trades:
+        if "GBP.USD" in el['contract_description_1']:
+            print(el)
+    print(len(trades))
+
 def main():
     checkAuthStatus()
-
-    accId = getAccounts()[0]
-    print(accId)
-    historicalData(conid=4036812, period='1h', bar='1m',outsideRth=True, exchange='', startTime='20221212-00:00:00')
-    
+#    placeSingleOrder(symbol="GBP.USD", exchange="SMART", action="BUY", 
+#            orderType="MKT", tif="DAY", orth=False, quantity=1,
+#            orderRef=None)
+    getOrderRefs()
 
 
 
 if __name__ == "__main__":
     main()
-        

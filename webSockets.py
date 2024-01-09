@@ -141,6 +141,8 @@ async def sendMessages(msgList):
 
             if 'topic' in jsonData.keys():
 
+                print(jsonData)
+
                 if jsonData['topic'].startswith("smh+") and historicalDataUnsubscribed == False:
                     serverID = jsonData['serverId']
                     msg = unsubscibeHistoricalData(serverID)
@@ -166,14 +168,21 @@ async def sendMessages(msgList):
             if 'error' in jsonData.keys():
                 print(jsonData['error'])
 
-def main():
-    # Monitor if market is open, implement the active hours tracking
+def testMktDepthRequests():
     symbols = [("BMW", "STK"),("AAPL", "STK")]
     messages = []
     for s in symbols:
         msg = marketDepthRequest(symbol=s[0], secType=s[1])
         messages.append(msg)
     asyncio.get_event_loop().run_until_complete(sendMessages(messages))
+
+def liveOrderUpdates():
+    msg = create_SOR_req()
+    messages = [msg]
+    asyncio.get_event_loop().run_until_complete(sendMessages(messages))
+
+def main():
+    liveOrderUpdates()
 
 if __name__ == "__main__":
     urllib3.disable_warnings()

@@ -1,0 +1,11 @@
+#################################################
+
+
+Steps to replicate:
+
+1. Submit two orders
+2. Call /iserver/account/orders until new orders are returned
+3. Place third order
+4. Call /iserver/account/orders once, check if third order included
+
+API returns 503 and 429 for wrong startTime date format. Perke?
