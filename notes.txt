@@ -1,11 +1,104 @@
 #################################################
 
 
-Steps to replicate:
+Common questions: 
+  
+  0. How is client authenticated and should one be vorried
+    about security. 
+    a. Why is it not allowed to run the app from any other 
+    address than localhost.
+  1. How to maintain stable connection?
+    a. How to recconect/reauthenticate?
+    b. Keep session alive?
+  2. How to track and store order data?
+    a. CSV, SQL, JSON
+  3. How to obtain option chains/WAR contracts/Futures contracts
+    a. Function that accepts sectype (WAR, FOP, OPT) and returns a list of
+    associated contracts
+  4. How to place/cancle/modify bracket order?
+  5. 
 
-1. Submit two orders
-2. Call /iserver/account/orders until new orders are returned
-3. Place third order
-4. Call /iserver/account/orders once, check if third order included
+##################################################
 
-API returns 503 and 429 for wrong startTime date format. Perke?
+Research of authentication mechanism.
+
+Found some java classes. Will decompile them for 
+further review:
+
+https://github.com/java-decompiler/jd-gui/releases
+https://www.benf.org/other/cfr/
+
+Authentication class:
+
+  authenticateUser()
+  checksAuthStatus() - capture exceptions
+  parseAuthResponse()
+  reauthenticateSession()
+  changeServer()
+  restartDedicatedServer()
+
+
+#################################################
+
+        Order placing system
+
+Should be able to:
+
+1. Place order
+2. Cancel order
+3. Modify order
+4. Write order info to internal database
+
+Order class:
+  
+  createOrder()
+  placeOrder()
+  cancelOrder()
+  modifyOrder()
+  storeOrder()
+
+
+#################################################
+
+        Order monitoring system
+
+Provides information on orders that are currently live.
+
+Checks for duplicate orders/orderids
+
+Is able to track an order by either orderId assigned
+by the system or unique order_ref assigned by the user.
+
+What is the time zone id of the dates that orders are returned in?
+Currently API is configured to return instrument-specific data in 
+instrument time-zone.
+
+Should be able to:
+
+1. Obtain data from Live orders endpont
+2. Obtain data from Order status endpoint
+3. Obtain data from websockets trades 'str' request.
+4. Fetch data from internal database
+
+All above using either order_ref or orderid, not both.
+
+#####################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
