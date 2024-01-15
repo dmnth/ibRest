@@ -28,12 +28,27 @@ further review:
 https://github.com/java-decompiler/jd-gui/releases
 https://www.benf.org/other/cfr/
 
-Authentication class:
+Session class:
 
   authenticateUser()
+
   checksAuthStatus() - capture exceptions
+      At this moment checksAuthStatus does not 
+      capture all exceptions. 
+
+      - authenticated: False, competing: True, connected: True
+
+      remains 
+
   parseAuthResponse()
+
+      - same does not parse the resposnse json wiht authenticated: False
+
   reauthenticateSession()
+
+      - makes 5 attempts to recconnect by utilizing recursive call than
+      exits the application
+
   changeServer()
   restartDedicatedServer()
 
