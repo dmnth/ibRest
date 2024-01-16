@@ -5,45 +5,13 @@ import json
 import time
 import sys
 
-local_ip = "127.0.0.1:5000"
-base_url = f"https://{local_ip}/v1/api"
+from exceptions import *
+from orderFactory import createSampleOrder
+from endpoints import endpoints
 
 requests.packages.urllib3.disable_warnings()
 
-class Unauthenticated(Exception):
-    # Is triggered if user is unauthenticated 
-    # Either was not logged in or session timed out
-    pass
 
-class Unauthorized(Exception):
-    pass
-
-class AuthenticationFailureException(Exception):
-    # Is triggered on occasion when there is a TWS or IBGateway session running
-    # Or if the previous session was not properly exited by logging out of the 
-    # TWS or calling /logout endpoint.
-    pass
-
-class CompetingSessionException(Exception):
-    # is raised if there is a competing session running. Only one session
-    # is allowed per username
-    pass
-
-class Contract():
-
-    def __init__(self):
-        return
-
-    def __repr__(self):
-        return f'class Contract'
-
-class Order():
-
-    def __init__(self):
-        # Initialize order details
-
-    def __repr__(self):
-        return f'class Order'
 
 class OrderMonitor():
 
@@ -56,6 +24,24 @@ class OrderMonitor():
     def __repr__(self):
         return f'class OrderMonitor'
 
+class Account():
+
+    def __init__(self):
+        self.id = ''
+
+    def getId(self):
+        endpoint = endpoints['accounts']
+        resp = requests.get(endpoint, verify=False) 
+        jsonData = json.loads(resp.text)
+        accounts = jsonData['accounts']
+        if len(accounts) > 1:
+            print("Will have to pick an account")
+            sys.exit()
+        return accounts[0]
+
+    def switch(selt):
+        return
+
 class Session():
 
     def __init__(self):
@@ -66,14 +52,15 @@ class Session():
 
     def relogin(self, username, password):
         return
-    
+
     def checkAuthStatus(self):
         if self.attempts != 0:
             print(f"Reauth attempt number: {self.attempts}")
         try:
-            response = requests.get(base_url + "/iserver/auth/status", verify=False)
+            endpoint = endpoints['auth_status']
+            response = requests.get(endpoint, verify=False)
             if response.status_code == 401:
-                raise Unauthenticated 
+                raise NotLoggedIn 
             jsonData = json.loads(response.text)
             self.parseAuthResponse(jsonData)
             print("Authenticated successfully")
@@ -81,11 +68,10 @@ class Session():
         except requests.exceptions.ConnectionError:
             print(f"Could't connect to server. Make sure that gateway is running")
 
-        except Unauthenticated:
+        except NotLoggedIn:
             print("Please log in")
 
-        except AuthenticationFailureException:
-            print("Make sure that you have properly closed the all other sessions")
+        except NotAuthenticated:
             self.reauthenticateSession()
 
         except CompetingSessionException:
@@ -97,7 +83,7 @@ class Session():
     def parseAuthResponse(self, jsonData):
         if jsonData['authenticated'] == jsonData['competing'] == jsonData['connected'] == False:
             # this happens if TWS runs in live or paper mode with same credentials
-            raise AuthenticationFailureException
+            raise NotAuthenticated
 
         if jsonData['competing'] == True:
             raise CompetingSessionException
@@ -110,9 +96,9 @@ class Session():
         # Why are we adding /sso/validate ?
         response = requests.get(base_url + '/iserver/reauthenticate', verify=False)
         print(response.text)
-        time.sleep(1)
         self.attempts += 1
         if self.attempts < 5:
+            time.sleep(2)
             self.checkAuthStatus()
         else:
             print("Have sent 5 reauth requests, exiting ...")
@@ -127,12 +113,14 @@ class DBWriter():
     def __init__(self):
         return
 
-class TraderApp(Session):
+class Broker(Session):
 
     def __init__(self):
-        Order.__init__(self)
         OrderMonitor.__init__(self)
         Session.__init__(self)
+        Account.__init__(self)
+        self.account = Account()
+        self.acctId = self.account.getId() 
 
     def check(self):
         Order()._Order__sampleFunction()
@@ -141,18 +129,47 @@ class TraderApp(Session):
     def isAuthenticated(self):
         self.checkAuthStatus()
 
-    def placeOrder(self, contract, order):
-        # Check if authenticated
+    def setAccountId(self):
         self.isAuthenticated()
+        self.acctId = self.account.getId() 
 
-    
+    def placeOrder(self):
+        # Check if authenticated
+        data = createSampleOrder(self.acctId)
+        endpoint = endpoints['place_order'].replace('accountId', self.acctId)
+        resp = requests.post(endpoint, verify=False, json=data)
+        jsonData = json.loads(resp.text)
+        print("/iserver/account/{accountid}/orders response: ", jsonData)
+        for el in jsonData:
+            if 'error' in el:
+                print(f"---> Error while placing order: {jsonData['error']}")
+                sys.exit()
+                 
+            if type(el) == dict and "id" in el.keys():
+                jsonData = self.orderReply(el['id'])
+        return jsonData[0] 
+
+    def orderReply(self, replyID):
+        print("Reply id: ", replyID)
+#        endpoint = base_url + f"/iserver/reply/{replyID}"
+        endpoint = endpoints['reply'].replace('replyID', replyID)
+        data = {'confirmed': True}
+        response = requests.post(endpoint, verify=False, json=data)
+        jsonData = json.loads(response.text)
+        print(jsonData)
+
+    def modifyOrder(self, orderId):
+        return
+
+    def cancelOrder(self, orderId):
+        return
 
     def __repr__(self):
         return 'Main Aplication'
 
 if __name__ == "__main__":
     
-    app = TraderApp()
-    app.placeOrder('sample', 'test')
-
+    broker  = Broker()
+    broker.setAccountId()
+    broker.placeOrder()
 
