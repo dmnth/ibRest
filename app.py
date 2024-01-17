@@ -5,13 +5,12 @@ import json
 import time
 import sys
 
+from sqlalchemy import create_engine, text
 from exceptions import *
 from orderFactory import createSampleOrder
 from endpoints import endpoints
 
 requests.packages.urllib3.disable_warnings()
-
-
 
 class OrderMonitor():
 
@@ -20,6 +19,16 @@ class OrderMonitor():
 
     def __sampleFunction(self):
         print("This function belongs to OrderMonitor class")
+
+    def retrieveTradesHistory(self, days=''):
+        params = {
+                "days": days 
+                }
+        resp = requests.get(endpoints['trades'], params=params, verify=False)
+        jsonData = json.loads(resp.text)
+        with open('trades.json', 'w') as outfile:
+            json.dump(jsonData, outfile, indent=2)
+        return jsonData 
 
     def __repr__(self):
         return f'class OrderMonitor'
@@ -94,7 +103,7 @@ class Session():
     def reauthenticateSession(self):
         print('Trying to reauthenticate the session... ')
         # Why are we adding /sso/validate ?
-        response = requests.get(base_url + '/iserver/reauthenticate', verify=False)
+        response = requests.get(endpoints['reauth'], verify=False)
         print(response.text)
         self.attempts += 1
         if self.attempts < 5:
@@ -108,7 +117,7 @@ class Session():
     def __repr__(self):
         return f'class Authentication'
 
-class DBWriter():
+class dB():
 
     def __init__(self):
         return
@@ -120,7 +129,8 @@ class Broker(Session):
         Session.__init__(self)
         Account.__init__(self)
         self.account = Account()
-        self.acctId = self.account.getId() 
+        self.monitor = OrderMonitor()
+        self.acctId = '' 
 
     def check(self):
         Order()._Order__sampleFunction()
@@ -129,12 +139,14 @@ class Broker(Session):
     def isAuthenticated(self):
         self.checkAuthStatus()
 
+    def getTrades(self, days=''):
+        self.monitor.retrieveTradesHistory(days)
+
     def setAccountId(self):
         self.isAuthenticated()
         self.acctId = self.account.getId() 
 
     def placeOrder(self):
-        # Check if authenticated
         data = createSampleOrder(self.acctId)
         endpoint = endpoints['place_order'].replace('accountId', self.acctId)
         resp = requests.post(endpoint, verify=False, json=data)
@@ -144,21 +156,31 @@ class Broker(Session):
             if 'error' in el:
                 print(f"---> Error while placing order: {jsonData['error']}")
                 sys.exit()
-                 
             if type(el) == dict and "id" in el.keys():
-                jsonData = self.orderReply(el['id'])
+                time.sleep(1)
+                jsonData = self.confirmOrder(el['id'])
+        print(jsonData)
         return jsonData[0] 
 
-    def orderReply(self, replyID):
-        print("Reply id: ", replyID)
+    def confirmOrder(self, replyId):
+        print("Reply id: ", replyId)
 #        endpoint = base_url + f"/iserver/reply/{replyID}"
-        endpoint = endpoints['reply'].replace('replyID', replyID)
+        endpoint = endpoints['reply'].replace('replyId', replyId)
+        print(endpoint)
         data = {'confirmed': True}
         response = requests.post(endpoint, verify=False, json=data)
-        jsonData = json.loads(response.text)
-        print(jsonData)
+        if len(response.text) != 0:
+            jsonData = json.loads(response.text)
+            for e in jsonData:
+                if 'id' in e.keys():
+                    print(f"Confirmation: {e['id']}")
+                    orderReply(e['id'])
+            return jsonData
+        else:
+            print("Nothing left to confirm")
 
     def modifyOrder(self, orderId):
+        print("Modifying an order with id: {orderId}")
         return
 
     def cancelOrder(self, orderId):
@@ -169,7 +191,8 @@ class Broker(Session):
 
 if __name__ == "__main__":
     
-    broker  = Broker()
+    broker = Broker()
+    broker.isAuthenticated()
     broker.setAccountId()
     broker.placeOrder()
 
