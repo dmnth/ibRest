@@ -97,8 +97,8 @@ def create_SOR_req():
     return msg
 
 def create_STR_req():
-    msg = 'str+{"realtimeUpdatesOnly": true}'
-    return
+    msg = 'str+{\'realtimeUpdatesOnl\': true, \'days\': \'\'}'
+    return msg
 
 def unsubscibeHistoricalData(serverID):
     msg = "umh+" + serverID 
@@ -141,6 +141,10 @@ async def sendMessages(msgList):
 
             if 'topic' in jsonData.keys():
 
+                if jsonData['topic'] == 'str':
+                    with open('tradesData.json', 'w') as file:
+                        json.dump(jsonData, file, indent=4)
+                        break
                 print(jsonData)
 
                 if jsonData['topic'].startswith("smh+") and historicalDataUnsubscribed == False:
@@ -153,6 +157,10 @@ async def sendMessages(msgList):
                 if jsonData['topic'].startswith("sbd"):
                     print("market depth --> ", jsonData['topic'])
 
+                if jsonData['topic'] == 'sor':
+                    print(jsonData['topic'])
+                    break
+
                 if jsonData['topic'] == "sbd" and mktDepthUnsubscribed == False:
                     print(jsonData)
 #                    acctID = getAccountId()
@@ -160,6 +168,7 @@ async def sendMessages(msgList):
 #                    messages.append(msg)
 #                    mktDepthUnsubscribed = True
 #                    print("Market depth data was unsubscribed")
+
 
                 if jsonData['topic'] == "system": 
                     # Keep session alive 
@@ -177,7 +186,8 @@ def testMktDepthRequests():
     asyncio.get_event_loop().run_until_complete(sendMessages(messages))
 
 def liveOrderUpdates():
-    msg = create_SOR_req()
+    msg = create_STR_req()
+    print(type(msg))
     messages = [msg]
     asyncio.get_event_loop().run_until_complete(sendMessages(messages))
 
