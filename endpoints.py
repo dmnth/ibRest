@@ -12,4 +12,6 @@ endpoints = {
         'accounts': base_url + '/iserver/accounts',
         'place_order': base_url + f'/iserver/account/accountId/orders',
         'reply': base_url + f'/iserver/reply/replyId',
+        'trades': base_url + '/iserver/account/trades',
+        'modify': base_url + '/iserver/account/aid/order/oid'
         }
