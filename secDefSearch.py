@@ -124,11 +124,13 @@ def run():
     parser.add_argument('-s', '--symbol', help = "symbol of the instrument")
     parser.add_argument('-sec', '--sectype', help = "security type - either WAR, OPT or FOP")
     args = parser.parse_args()
-    symbol = args.symbol 
-    sectype = args.sectype 
+
     if not args.symbol or not args.sectype:
         parser.print_help()
         sys.exit()
+        
+    symbol = args.symbol 
+    sectype = args.sectype 
     secDefParams(symbol, sectype)
 
 def main():
