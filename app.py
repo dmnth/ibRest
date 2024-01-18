@@ -5,9 +5,8 @@ import json
 import time
 import sys
 
-from sqlalchemy import create_engine, text
 from exceptions import *
-from orderFactory import createSampleOrder
+from orderFactory import createSampleOrder, createBracketOrder
 from endpoints import endpoints
 
 requests.packages.urllib3.disable_warnings()
@@ -117,10 +116,6 @@ class Session():
     def __repr__(self):
         return f'class Authentication'
 
-class dB():
-
-    def __init__(self):
-        return
 
 class Broker(Session):
 
@@ -146,42 +141,51 @@ class Broker(Session):
         self.isAuthenticated()
         self.acctId = self.account.getId() 
 
-    def placeOrder(self):
+    def placeOrder(self, jsonData):
         data = createSampleOrder(self.acctId)
         endpoint = endpoints['place_order'].replace('accountId', self.acctId)
         resp = requests.post(endpoint, verify=False, json=data)
         jsonData = json.loads(resp.text)
-        print("/iserver/account/{accountid}/orders response: ", jsonData)
         for el in jsonData:
-            if 'error' in el:
+            if 'error' in el.keys():
                 print(f"---> Error while placing order: {jsonData['error']}")
                 sys.exit()
             if type(el) == dict and "id" in el.keys():
                 time.sleep(1)
                 jsonData = self.confirmOrder(el['id'])
+
         print(jsonData)
         return jsonData[0] 
 
     def confirmOrder(self, replyId):
-        print("Reply id: ", replyId)
-#        endpoint = base_url + f"/iserver/reply/{replyID}"
         endpoint = endpoints['reply'].replace('replyId', replyId)
         print(endpoint)
         data = {'confirmed': True}
         response = requests.post(endpoint, verify=False, json=data)
         if len(response.text) != 0:
             jsonData = json.loads(response.text)
+            print(jsonData)
             for e in jsonData:
+
+                if e == 'error':
+                    print(jsonData['error'], 'error')
+                    sys.exit()
+
                 if 'id' in e.keys():
                     print(f"Confirmation: {e['id']}")
-                    orderReply(e['id'])
-            return jsonData
-        else:
-            print("Nothing left to confirm")
+                    self.confirmOrder(e['id'])
 
-    def modifyOrder(self, orderId):
-        print("Modifying an order with id: {orderId}")
-        return
+                if jsonData[0]['order_status'] == 'Cancelled':
+                    print("Order status: Cancelled")
+                    sys.exit()
+        else:
+            return jsonData
+
+    def modifyOrder(self, orderId, jsonData):
+        print(jsonData)
+        endpoint = endpoints['modify'].replace('oid', orderId).replace('aid', self.acctId)
+        response = requests.post(endpoint, verify=False, json=jsonData)
+        print(response.text)
 
     def cancelOrder(self, orderId):
         return
@@ -194,5 +198,16 @@ if __name__ == "__main__":
     broker = Broker()
     broker.isAuthenticated()
     broker.setAccountId()
-    broker.placeOrder()
+
+    order1 = createSampleOrder(broker.acctId) 
+    order2 = createBracketOrder(broker.acctId)
+    print(order1)
+    print(order2)
+
+    json = broker.placeOrder(order1)
+    print("RETURNED: ", json)
+    oid = json['order_id']
+    time.sleep(1)
+    removed = order2['orders'][0].pop('acctId')
+    broker.modifyOrder(oid, order2['orders'][0]) 
 
