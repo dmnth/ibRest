@@ -6,7 +6,7 @@ import time
 import sys
 
 from exceptions import *
-from orderFactory import createSampleContract, createSampleOrder 
+from orderFactory import createSampleContract, createSampleOrder, createBracketOrder 
 from endpoints import endpoints
 
 requests.packages.urllib3.disable_warnings()
@@ -255,24 +255,43 @@ def testOrderOperations():
     contract = createSampleContract() 
     order = createSampleOrder()
     order.updateAccountId(broker.acctId)
-    print(contract)
-    print(order)
-
+    order._toJSON()
     order.JSON.update(contract.JSON)
+    print(order)
     orderPayload = {'orders': [order.JSON] }
 
     json = broker.placeOrder(orderPayload)
     print("RETURNED: ", json)
-    oid = json['order_id']
+    oid = json[0]['order_id']
     print(oid)
     print("Order id: ", oid)
     time.sleep(1)
     orderPayload['orders'][0]['price'] = 0.677
     del orderPayload['orders'][0]['acctId']
+    orderPayload['orders'][0]['referrer'] = 'nigger'
+    orderPayload['orders'][0]['cOID'] = 'nigger'
     print(orderPayload['orders'][0])
     broker.modifyOrder(oid, orderPayload['orders'][0]) 
 
     broker.showLiveOrders('')
+
+def testBracketOrder():
+    broker = Broker()
+    broker.isAuthenticated()
+    broker.setAccountId()
+    contract = createSampleContract()
+    bracketOrder = createBracketOrder() 
+    orderPayload = {'orders': [] }
+    for el in bracketOrder:
+        el.updateAccountId(broker.acctId)
+        el._toJSON()
+        el.JSON.update(contract.JSON)
+        orderPayload['orders'].append(el.JSON)
+        print(orderPayload)
+#    print(orderPayload)
+#    print(type(orderPayload))
+#    print(type(orderPayload['orders'][0]['outsideRTH']))
+    broker.placeOrder(orderPayload)
 
 def testSnapshotFields():
 

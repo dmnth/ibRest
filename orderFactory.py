@@ -34,7 +34,8 @@ class Contract():
     def __repr__(self):
         if not self.JSON:
             self._toJSON()
-        return f"Contract JSON: {self.JSON}"
+        return f"Contract JSON: {self.JSON}\n"
+
 class Order():
 
     def __init__(self):
@@ -46,6 +47,10 @@ class Order():
         self.tif = ""
         self.quantity = ""
         self.cOID = ""
+        self.referrer = ""
+        self.parentId = ""
+        self.price = "" 
+        self.useAdaptive = False 
         self.JSON = {}
 
     def _toJSON(self):
@@ -54,11 +59,14 @@ class Order():
                 "cOID": self.cOID,
                 "orderType": self.orderType,
                 "outsideRTH": self.outsideRth,
-                "price": self.price,
+#                "price": self.price,
                 "side": self.side,
                 "ticker": self.ticker,
                 "tif": self.tif,
-                "quantity": self.quantity
+                "quantity": self.quantity,
+                "referrer": self.referrer,
+                "parentId": self.parentId,
+                "useAdaptive": self.useAdaptive
                 }
 
     def updateAccountId(self, acctId):
@@ -67,13 +75,13 @@ class Order():
     def __repr__(self):
         if not self.JSON:
             self._toJSON()
-        return f"Order JSON: {self.JSON}"
+        return f"Order JSON: {self.JSON}\n"
 
 
 def createSampleContract():
 
     contract = Contract()
-    contract.conid = 570639953
+    contract.conid = 570639953 
     contract.exchange = "NASDAQ"
     contract.ticker = "XCUR"
 
@@ -84,13 +92,71 @@ def createSampleContract():
 def createSampleOrder():
     
     order = Order()
-    order.orderType = "LMT"
-    order.outsideRth = True
-    order.price = 0.63
+    order.orderType = "MKT"
+    order.outsideRth = False 
+#    order.price = 0.63
     order.side = "BUY"
     order.tif = "GTC"
-    order.quantity = 1117
-    order.cOID = "uniqueOrder"
+    order.quantity = 1
+    order.referrer = 'boris'
+    order.cOID = "uniqueOrder445w5"
 
     return order
+
+
+def createBracketOrder():
+
+    contract = createSampleContract()
+
+    order = Order()
+    order.orderType = "MKT"
+    order.outsideRth = False 
+#    order.price = 0.63
+    order.side = "BUY"
+    order.tif = "GTC"
+    order.quantity = 1
+    order.cOID = "uniqueOrderNumber3"
+
+    profitTaker = Order()
+    profitTaker.orderType = "MKT"
+    profitTaker.outsideRth = False 
+#    profitTaker.price = 0.63
+    profitTaker.side = "SELL"
+    profitTaker.tif = "GTC"
+    profitTaker.referrer = "ProfitTaker"
+    profitTaker.quantity = 1
+    profitTaker.useAdaptive = False
+    profitTaker.parentId = order.cOID
+
+    stopLoss = Order()
+    stopLoss.orderType = "MKT"
+    stopLoss.outsideRth = False 
+#    stopLoss.price = 0.65
+    stopLoss.side = "SELL"
+    stopLoss.tif = "GTC"
+    stopLoss.referrer = "ProfitTaker"
+    stopLoss.quantity = 1
+    stopLoss.useAdaptive = False
+    stopLoss.parentId = order.cOID
+    
+    return [order, profitTaker, stopLoss] 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
