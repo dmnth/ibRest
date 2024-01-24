@@ -10,51 +10,49 @@ class Contract():
         self.symbol = ''
         self.secType = ''
         self.currency = ''
-        self.exchnage = ''
+        self.exchange = ''
+        self.JSON = {}
     
     def useConidex(self):
-        if self.conid != '' or self.exchnage != '':
-            self.conidex = self.conid + '@' + self.exchange
-            self.conid = ''
-            self.exchnage = ''
-        else:
-            print("To create conidex both conid and exchange are required")
+        return
 
     def useConidExchange(self):
-        if self.conidex != '':
-            pair = self.conidex.split('@')
-            self.conid = pair[0]
-            self.exchnage = pair[1]
-        else:
-            print("conidex is missing")
+        return
 
     def fillDetails(symbol):
         return
 
+    def _toJSON(self):
+        self.JSON = {
+                "conid": self.conid,
+                "conidex": self.conidex, 
+                "listingExchange": self.exchange,
+                "ticker": self.ticker
+                }
+
+
     def __repr__(self):
-        return f'Contract: {self.symbol} - {self.conid} - {self.exchange} - {self.secType} - {self.currency}'
+        if not self.JSON:
+            self._toJSON()
+        return f"Contract JSON: {self.JSON}"
+class Order():
 
-class Order(Contract):
-
-    def __init__(self, Contract):
-        self.contract = Contract
+    def __init__(self):
         self.acctId = ""
-        self.cOID = ""
         self.orderType = ""
         self.outsideRth = ""
         self.side = ""
         self.ticker = ""
         self.tif = ""
         self.quantity = ""
+        self.cOID = ""
+        self.JSON = {}
 
     def _toJSON(self):
-        jsonData = {
+        self.JSON = {
                 "acctId": self.acctId,
-                "conid": self.contract.conid,
                 "cOID": self.cOID,
-                "conidex": self.contract.conidex, 
                 "orderType": self.orderType,
-                "listingExchange": self.contract.exchange,
                 "outsideRTH": self.outsideRth,
                 "price": self.price,
                 "side": self.side,
@@ -63,58 +61,36 @@ class Order(Contract):
                 "quantity": self.quantity
                 }
 
-        return jsonData
+    def updateAccountId(self, acctId):
+        self.acctId = acctId
 
     def __repr__(self):
-        orderJSON = self._toJSON()
-        return f"Order JSON: {orderJSON}"
+        if not self.JSON:
+            self._toJSON()
+        return f"Order JSON: {self.JSON}"
 
 
-def createSampleOrder(acctId):
-
-        contract = Contract()
-        contract.conid = 570639953 
-        contract.exchange = "NASDAQ"
-
-        order = Order(contract)
-        order.acctId = acctId 
-#        order.cOID = "other_unique_payload1"
-        order.orderType = "LMT"
-        order.outsideRth = False 
-        order.price = 0.797
-        order.side = "SELL"
-        order.ticker = "undefined"
-        order.tif = "GTC"
-        order.quantity = 1117 
-
-        data = { "orders": [
-            order._toJSON() 
-            ]
-            }
-
-        return data
-
-def createBracketOrder(accId):
+def createSampleContract():
 
     contract = Contract()
-    contract.conid = "570639953"
+    contract.conid = 570639953
     contract.exchange = "NASDAQ"
-#    contract.useConidex()
+    contract.ticker = "XCUR"
 
-    order = Order(contract)
-#    order.cOID = "other_unique_payload1"
-    order.acctId = accId
+    contract.__repr__()
+
+    return contract
+
+def createSampleOrder():
+    
+    order = Order()
     order.orderType = "LMT"
-    order.outsideRth = False
-    order.price = 0.8955000000000001
-    order.side = "SELL"
-    order.ticker = "undefined"
+    order.outsideRth = True
+    order.price = 0.63
+    order.side = "BUY"
     order.tif = "GTC"
     order.quantity = 1117
+    order.cOID = "uniqueOrder"
 
-    data = {"orders": [
-        order._toJSON()
-        ]
-        }
+    return order
 
-    return data

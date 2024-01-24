@@ -6,7 +6,7 @@ import time
 import sys
 
 from exceptions import *
-from orderFactory import createSampleOrder, createBracketOrder
+from orderFactory import createSampleContract, createSampleOrder 
 from endpoints import endpoints
 
 requests.packages.urllib3.disable_warnings()
@@ -18,6 +18,19 @@ class OrderMonitor():
 
     def __sampleFunction(self):
         print("This function belongs to OrderMonitor class")
+
+    def retrieveLiveOrders(self, filters):
+        print(filters)
+        params = {'filters': filters}
+        response = requests.get(endpoints['live_orders'], params=params, verify=False)
+        try:
+            jsonData = json.loads(response.text)
+        except json.decoder.JSONDecodeError:
+            # Sometimes API will return an empty string which
+            # json fails to parse
+            print("Empty response returned, json failed to parse")
+            jsonData = []
+        return jsonData
 
     def retrieveTradesHistory(self, days=''):
         params = {
@@ -71,7 +84,8 @@ class Session():
                 raise NotLoggedIn 
             jsonData = json.loads(response.text)
             self.parseAuthResponse(jsonData)
-            print("Authenticated successfully")
+            print(jsonData)
+            return jsonData 
 
         except requests.exceptions.ConnectionError:
             print(f"Could't connect to server. Make sure that gateway is running")
@@ -87,6 +101,8 @@ class Session():
 
         except Exception as err:
             print(f"Authentication class exception -> ", err)
+
+
 
     def parseAuthResponse(self, jsonData):
         if jsonData['authenticated'] == jsonData['competing'] == jsonData['connected'] == False:
@@ -132,60 +148,96 @@ class Broker(Session):
         OrderMonitor()._OrderMonitor__sampleFunction()
 
     def isAuthenticated(self):
-        self.checkAuthStatus()
+        data = self.checkAuthStatus()
+        print("REAUTH: ", data)
+        if data['authenticated'] == True:
+            return True
 
-    def getTrades(self, days=''):
+    def showLiveOrders(self, filters=''):
+        orders = self.monitor.retrieveLiveOrders(filters)
+        jsonRepr = json.dumps(orders, indent=4)
+        with open('liveOrders.json', 'w') as outFile:
+            outFile.write(jsonRepr)
+
+    def showTrades(self, days=''):
         self.monitor.retrieveTradesHistory(days)
 
     def setAccountId(self):
-        self.isAuthenticated()
         self.acctId = self.account.getId() 
 
-    def placeOrder(self, jsonData):
-        data = createSampleOrder(self.acctId)
-        endpoint = endpoints['place_order'].replace('accountId', self.acctId)
-        resp = requests.post(endpoint, verify=False, json=data)
-        jsonData = json.loads(resp.text)
-        for el in jsonData:
+    def processOrderResponse(self, orderData):
+
+        for el in orderData: 
+
+            if el == 'error':
+                print(el, orderData)
+                sys.exit()
+
             if 'error' in el.keys():
                 print(f"---> Error while placing order: {jsonData['error']}")
                 sys.exit()
             if type(el) == dict and "id" in el.keys():
+                print("Order requires confirmation")
                 time.sleep(1)
-                jsonData = self.confirmOrder(el['id'])
+                print(orderData)
+                orderData = self.confirmOrder(el['id'])
+                print("Confirmation 1: ", orderData)
 
-        print(jsonData)
-        return jsonData[0] 
+        print("JSON: ", orderData)
+        return orderData 
+
+    def placeOrder(self, jsonData):
+        endpoint = endpoints['place_order'].replace('accountId', self.acctId)
+        resp = requests.post(endpoint, verify=False, json=jsonData)
+        order = json.loads(resp.text)
+        orderData = self.processOrderResponse(order)
+        return orderData
 
     def confirmOrder(self, replyId):
         endpoint = endpoints['reply'].replace('replyId', replyId)
-        print(endpoint)
         data = {'confirmed': True}
-        response = requests.post(endpoint, verify=False, json=data)
-        if len(response.text) != 0:
+        message = {}
+        while 'order_id' not in message.keys():
+            print("Incoming: ", message)
+            response = requests.post(endpoint, verify=False, json=data)
             jsonData = json.loads(response.text)
-            print(jsonData)
-            for e in jsonData:
+            print("Outcoming: ", jsonData)
+            if type(jsonData) == dict and 'error' in jsonData.keys():
+                print("error: ", jsonData['error'])
+                sys.exit()
 
-                if e == 'error':
-                    print(jsonData['error'], 'error')
-                    sys.exit()
-
-                if 'id' in e.keys():
-                    print(f"Confirmation: {e['id']}")
-                    self.confirmOrder(e['id'])
-
-                if jsonData[0]['order_status'] == 'Cancelled':
-                    print("Order status: Cancelled")
-                    sys.exit()
-        else:
-            return jsonData
+            message = jsonData[0]
+    
+        return message
 
     def modifyOrder(self, orderId, jsonData):
         print(jsonData)
         endpoint = endpoints['modify'].replace('oid', orderId).replace('aid', self.acctId)
         response = requests.post(endpoint, verify=False, json=jsonData)
-        print(response.text)
+        order = json.loads(response.text)
+        orderData = self.processOrderResponse(order)
+        print("Modification: ", orderData)
+
+    def makeMdSnapshot(self, conids, fields, since=""):
+        params = {
+                "conids": conids,
+                "fields": fields,
+                "since": since 
+                }
+        snapshot = {}
+        while True:
+            time.sleep(1)
+            response = requests.get(endpoints['snapshot'], params=params, verify=False)
+            jsonData = json.loads(response.text)
+            print(jsonData)
+
+        return
+
+    def unsubscribeMd(self, conid):
+        data = { 'conid': conid }
+        response = requests.post(endpoints['unsubscribe'], data=data, verify=False)
+        print("Unsubscribed: ", response.text)
+        return
 
     def cancelOrder(self, orderId):
         return
@@ -193,21 +245,44 @@ class Broker(Session):
     def __repr__(self):
         return 'Main Aplication'
 
-if __name__ == "__main__":
-    
+def testOrderOperations():
     broker = Broker()
     broker.isAuthenticated()
     broker.setAccountId()
 
-    order1 = createSampleOrder(broker.acctId) 
-    order2 = createBracketOrder(broker.acctId)
-    print(order1)
-    print(order2)
+    broker.showLiveOrders('PreSubmitted')
 
-    json = broker.placeOrder(order1)
+    contract = createSampleContract() 
+    order = createSampleOrder()
+    order.updateAccountId(broker.acctId)
+    print(contract)
+    print(order)
+
+    order.JSON.update(contract.JSON)
+    orderPayload = {'orders': [order.JSON] }
+
+    json = broker.placeOrder(orderPayload)
     print("RETURNED: ", json)
     oid = json['order_id']
+    print(oid)
+    print("Order id: ", oid)
     time.sleep(1)
-    removed = order2['orders'][0].pop('acctId')
-    broker.modifyOrder(oid, order2['orders'][0]) 
+    orderPayload['orders'][0]['price'] = 0.677
+    del orderPayload['orders'][0]['acctId']
+    print(orderPayload['orders'][0])
+    broker.modifyOrder(oid, orderPayload['orders'][0]) 
 
+    broker.showLiveOrders('')
+
+def testSnapshotFields():
+
+    broker = Broker()
+    if broker.isAuthenticated() == True:
+        broker.setAccountId()
+        broker.makeMdSnapshot(4815747, "6457,80,70,71,83,7087,7284,6509")
+#        broker.unsubscribeMd(265598)
+    else:
+        print("Not authenticated")
+
+if __name__ == "__main__":
+    testOrderOperations()
