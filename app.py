@@ -176,6 +176,7 @@ class Broker(Session):
             if 'error' in el.keys():
                 print(f"---> Error while placing order: {jsonData['error']}")
                 sys.exit()
+
             if type(el) == dict and "id" in el.keys():
                 print("Order requires confirmation")
                 time.sleep(1)
@@ -262,14 +263,11 @@ def testOrderOperations():
 
     json = broker.placeOrder(orderPayload)
     print("RETURNED: ", json)
-    oid = json[0]['order_id']
+    oid = json['order_id']
     print(oid)
     print("Order id: ", oid)
-    time.sleep(1)
-    orderPayload['orders'][0]['price'] = 0.677
+    orderPayload['orders'][0]['price'] = 0.546
     del orderPayload['orders'][0]['acctId']
-    orderPayload['orders'][0]['referrer'] = 'nigger'
-    orderPayload['orders'][0]['cOID'] = 'nigger'
     print(orderPayload['orders'][0])
     broker.modifyOrder(oid, orderPayload['orders'][0]) 
 
@@ -288,10 +286,9 @@ def testBracketOrder():
         el.JSON.update(contract.JSON)
         orderPayload['orders'].append(el.JSON)
         print(orderPayload)
-#    print(orderPayload)
-#    print(type(orderPayload))
-#    print(type(orderPayload['orders'][0]['outsideRTH']))
+
     broker.placeOrder(orderPayload)
+    broker.modifyOrder(orderPayload)
 
 def testSnapshotFields():
 
@@ -304,4 +301,4 @@ def testSnapshotFields():
         print("Not authenticated")
 
 if __name__ == "__main__":
-    testOrderOperations()
+    testBracketOrder()
