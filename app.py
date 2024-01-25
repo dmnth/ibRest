@@ -184,7 +184,6 @@ class Broker(Session):
                 orderData = self.confirmOrder(el['id'])
                 print("Confirmation 1: ", orderData)
 
-        print("JSON: ", orderData)
         return orderData 
 
     def placeOrder(self, jsonData):
@@ -211,10 +210,19 @@ class Broker(Session):
     
         return message
 
-    def modifyOrder(self, orderId, jsonData):
-        print(jsonData)
+    def modifySingleOrder(self, orderId, orderPayload, price, size):
+        print(orderPayload)
+
+        if len(orderPayload['orders']) > 1:
+            print("Cant handle multiple orders at once")
+            sys.exit()
+
+        orderPayload['orders'][0]['price'] = price 
+        orderPayload['orders'][0]['size'] = size
+        del orderPayload['orders'][0]['acctId']
+        modPayload = orderPayload['orders'][0]
         endpoint = endpoints['modify'].replace('oid', orderId).replace('aid', self.acctId)
-        response = requests.post(endpoint, verify=False, json=jsonData)
+        response = requests.post(endpoint, verify=False, json=modPayload)
         order = json.loads(response.text)
         orderData = self.processOrderResponse(order)
         print("Modification: ", orderData)
@@ -258,18 +266,11 @@ def testOrderOperations():
     order.updateAccountId(broker.acctId)
     order._toJSON()
     order.JSON.update(contract.JSON)
-    print(order)
     orderPayload = {'orders': [order.JSON] }
 
     json = broker.placeOrder(orderPayload)
-    print("RETURNED: ", json)
     oid = json['order_id']
-    print(oid)
-    print("Order id: ", oid)
-    orderPayload['orders'][0]['price'] = 0.546
-    del orderPayload['orders'][0]['acctId']
-    print(orderPayload['orders'][0])
-    broker.modifyOrder(oid, orderPayload['orders'][0]) 
+    broker.modifySingleOrder(oid, orderPayload, price=0.845, size=2) 
 
     broker.showLiveOrders('')
 
@@ -288,7 +289,6 @@ def testBracketOrder():
         print(orderPayload)
 
     broker.placeOrder(orderPayload)
-    broker.modifyOrder(orderPayload)
 
 def testSnapshotFields():
 
@@ -301,4 +301,4 @@ def testSnapshotFields():
         print("Not authenticated")
 
 if __name__ == "__main__":
-    testBracketOrder()
+    testOrderOperations()
