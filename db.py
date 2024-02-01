@@ -26,6 +26,8 @@ class dB():
         conn.commit()
         conn.close()
 
+    def writeOrder(sel, orderData):
+
 if __name__ == "__main__":
     db = dB()
     db.createEngine()

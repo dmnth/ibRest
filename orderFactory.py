@@ -1,5 +1,11 @@
 #! /usr/bin/env python3
 
+from endpoints import endpoints
+import requests
+import json
+
+
+# Remember to make multiple contract classes, OPT, FOP etc...
 class Contract():
 
     def __init__(self):
@@ -11,6 +17,10 @@ class Contract():
         self.secType = ''
         self.currency = ''
         self.exchange = ''
+        self.ticker = ''
+        self.multiplier = int() 
+        self.lastTradeDateOrContractMonth = ''
+        self.locaSymbol = ''
         self.JSON = {}
     
     def useConidex(self):
@@ -19,12 +29,31 @@ class Contract():
     def useConidExchange(self):
         return
 
-    def fillDetails(symbol):
+    def fillContractDetails(self):
+        return
+
+    def fillOptDetails(self, conid):
+        endpoint = endpoints['secdefid'].replace('coid', conid)
+        print(endpoint)
+        response = requests.get(endpoint, verify=False)
+        jsonData = json.loads(response.text)
+        print(jsonData)
+        if 'error' not in jsonData.keys():
+            self.conid = conid
+            self.symbol = jsonData['symbol']
+            self.secType = jsonData['instrument_type']
+            self.exchange = jsonData['exchange']
+            self.multiplier = jsonData['multiplier']
+            self.currency = jsonData['currency']
+            self.lastTradeDateOrContractMonth = jsonData['contract_month']
+            self.strike = jsonData['strike']
+            self.localSymbol = jsonData['local_symbol']
+        print(self)
         return
 
     def _toJSON(self):
         self.JSON = {
-                "conid": self.conid,
+                "conid": int(self.conid),
                 "conidex": self.conidex, 
                 "listingExchange": self.exchange,
                 "ticker": self.ticker
@@ -41,7 +70,7 @@ class Order():
     def __init__(self):
         self.acctId = ""
         self.orderType = ""
-        self.outsideRth = ""
+        self.outsideRth = False 
         self.side = ""
         self.ticker = ""
         self.tif = ""
@@ -51,23 +80,41 @@ class Order():
         self.parentId = ""
         self.price = "" 
         self.useAdaptive = False 
+        self.trailingType = ""
+        self.trailingAmount = ""
+        self.strategy = ""
+        self.strategyParameters = "" 
         self.JSON = {}
 
     def _toJSON(self):
-        self.JSON = {
+        self.JSON.update({
                 "acctId": self.acctId,
                 "cOID": self.cOID,
                 "orderType": self.orderType,
                 "outsideRTH": self.outsideRth,
-#                "price": self.price,
+                "price": self.price,
                 "side": self.side,
                 "ticker": self.ticker,
                 "tif": self.tif,
                 "quantity": self.quantity,
                 "referrer": self.referrer,
                 "parentId": self.parentId,
-                "useAdaptive": self.useAdaptive
-                }
+                "useAdaptive": self.useAdaptive,
+                "trailingType": self.trailingType,
+                "trailingAmt": self.trailingAmount,
+                "strategy": self.strategy,
+                "strategyParameters": self.strategyParameters
+                })
+
+    def isMktOrder(self):
+        del self.JSON['price']
+        self.JSON['orderType'] = 'MKT'
+
+    def adjustPrice(self, price):
+        self.JSON['price'] = price
+
+    def adjustSize(self, size):
+        self.JSON['size'] = size
 
     def updateAccountId(self, acctId):
         self.acctId = acctId
@@ -92,14 +139,14 @@ def createSampleContract():
 def createSampleOrder():
     
     order = Order()
-    order.orderType = "MKT"
+    order.orderType = "LMT"
     order.outsideRth = False 
-#    order.price = 0.63
+    order.price = 0.5999 
     order.side = "BUY"
-    order.tif = "GTC"
-    order.quantity = 1
+    order.tif = "DAY"
+    order.quantity = 20
     order.referrer = 'boris'
-    order.cOID = "uniqueOrder445w5"
+#    order.cOID = "someuniqueORDERID"
 
     return order
 
@@ -109,18 +156,18 @@ def createBracketOrder():
     contract = createSampleContract()
 
     order = Order()
-    order.orderType = "MKT"
+    order.orderType = "LMT"
     order.outsideRth = False 
-#    order.price = 0.63
+    order.price = 0.63
     order.side = "BUY"
     order.tif = "GTC"
     order.quantity = 1
     order.cOID = "uniqueOrderNumber3"
 
     profitTaker = Order()
-    profitTaker.orderType = "MKT"
+    profitTaker.orderType = "LMT"
     profitTaker.outsideRth = False 
-#    profitTaker.price = 0.63
+    profitTaker.price = 0.63
     profitTaker.side = "SELL"
     profitTaker.tif = "GTC"
     profitTaker.referrer = "ProfitTaker"
@@ -129,9 +176,9 @@ def createBracketOrder():
     profitTaker.parentId = order.cOID
 
     stopLoss = Order()
-    stopLoss.orderType = "MKT"
+    stopLoss.orderType = "LMT"
     stopLoss.outsideRth = False 
-#    stopLoss.price = 0.65
+    stopLoss.price = 0.65
     stopLoss.side = "SELL"
     stopLoss.tif = "GTC"
     stopLoss.referrer = "ProfitTaker"

@@ -6,7 +6,7 @@ import time
 import sys
 
 from exceptions import *
-from orderFactory import createSampleContract, createSampleOrder, createBracketOrder 
+from orderFactory import createSampleContract, createSampleOrder, createBracketOrder, Contract, Order
 from endpoints import endpoints
 
 requests.packages.urllib3.disable_warnings()
@@ -59,6 +59,11 @@ class Account():
             print("Will have to pick an account")
             sys.exit()
         return accounts[0]
+
+    def getWatchlistis(self):
+        endpoint = endpoints['watchlists']
+        resp = requests.get(endpoint, verify=False)
+        print(resp.text)
 
     def switch(selt):
         return
@@ -189,6 +194,7 @@ class Broker(Session):
     def placeOrder(self, jsonData):
         endpoint = endpoints['place_order'].replace('accountId', self.acctId)
         resp = requests.post(endpoint, verify=False, json=jsonData)
+        print("Place order response: ", resp.text, resp.status_code)
         order = json.loads(resp.text)
         orderData = self.processOrderResponse(order)
         return orderData
@@ -231,7 +237,7 @@ class Broker(Session):
         params = {
                 "conids": conids,
                 "fields": fields,
-                "since": since 
+        #        "since": since 
                 }
         snapshot = {}
         while True:
@@ -247,6 +253,9 @@ class Broker(Session):
         response = requests.post(endpoints['unsubscribe'], data=data, verify=False)
         print("Unsubscribed: ", response.text)
         return
+
+    def showWatchlists(self):
+        self.account.getWatchlistis()
 
     def cancelOrder(self, orderId):
         return
@@ -293,12 +302,92 @@ def testBracketOrder():
 def testSnapshotFields():
 
     broker = Broker()
+    broker.isAuthenticated()
+    contract = Contract()
+    contract.fillOptDetails('679322318')
     if broker.isAuthenticated() == True:
         broker.setAccountId()
-        broker.makeMdSnapshot(4815747, "6457,80,70,71,83,7087,7284,6509")
+        broker.makeMdSnapshot(679322318, "31,6509,7283,7633")
 #        broker.unsubscribeMd(265598)
     else:
         print("Not authenticated")
 
+def testTrailStopOrder():
+    broker = Broker()
+    broker.isAuthenticated()
+    broker.setAccountId()
+    contract = Contract()
+    contract.fillOptDetails('679322318')
+
+    order = Order()
+    order.price = 11
+    order.orderType = 'TRAIL'
+    order.side = 'BUY'
+    order.trailingType = 'amt'
+    order.trailingAmount = 2
+    order.quantity = 1
+    order.tif = 'GTC'
+    order._toJSON()
+
+    order.updateAccountId(broker.acctId)
+    order._toJSON()
+    order.JSON.update(contract.JSON)
+    del order.JSON['cOID']
+    del order.JSON['ticker']
+    del order.JSON['referrer']
+    del order.JSON['parentId']
+    del order.JSON['conidex']
+    order.JSON['conid'] = 679322318
+    orderPayload = {'orders': [order.JSON] }
+    jsonFile = json.dumps(orderPayload, indent=4)
+    with open('stpPayload.txt', 'w') as outfile:
+        outfile.write(jsonFile)
+        outfile.close()
+    print(jsonFile)
+    jsonReply = broker.placeOrder(orderPayload)
+    print(jsonReply)
+    print(type(jsonReply))
+
+def testAlgoOrder():
+    broker = Broker()
+    broker.isAuthenticated()
+    broker.setAccountId()
+    contract = Contract()
+    contract.fillOptDetails('679322318')
+
+    order = Order()
+    order.price = 11
+    order.orderType = 'TRAIL'
+    order.side = 'BUY'
+    order.trailingType = 'amt'
+    order.trailingAmount = 2
+    order.quantity = 1
+    order.tif = 'GTC'
+    order.strategy = "TWAP"
+    order.strategyParameters = {"AllowPastEndTime": True}
+
+    order.updateAccountId(broker.acctId)
+    print(order.JSON)
+    order._toJSON()
+    order.JSON.update(contract.JSON)
+    print(order.JSON)
+    orderPayload = {'orders': [order.JSON] }
+    jsonFile = json.dumps(orderPayload, indent=4)
+    print(jsonFile)
+    with open('algoPayload.txt', 'w') as outfile:
+        outfile.write(jsonFile)
+        outfile.close()
+    jsonReply = broker.placeOrder(orderPayload)
+    print(jsonReply)
+    print(type(jsonReply))
+
+
+
+def testWatchlists():
+    broker = Broker()
+    broker.isAuthenticated()
+    broker.setAccountId()
+    broker.showWatchlists()
+
 if __name__ == "__main__":
-    testOrderOperations()
+    testAlgoOrder()
