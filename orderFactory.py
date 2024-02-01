@@ -51,6 +51,32 @@ class Contract():
         print(self)
         return
 
+    def getAvailableAlgos(self, conid):
+        endpoint = endpoints['algorithms'].replace('conid', conid)
+        resp = requests.get(endpoint, verify=False)
+        try:
+            jsonData = json.loads(resp.text)
+        except Exception as err:
+            print(err, '\n Shutting down')
+            sys.exit()
+
+        return jsonData['algos']
+
+    # algos is a string delimtered by ; . Contains algosids
+    def getAlgoParams(self, conid, algos):
+        endpoint = endpoints['algorithms'].replace('conid', conid)
+        params = {'addDescriptions': 1, 'addParams': 1, 'algos': algos}
+        resp = requests.get(endpoint, verify=False, params=params)
+        try:
+            jsonData = json.loads(resp.text)
+        except Exception as err:
+            print(err, '\n Shutting down')
+            sys.exit()
+
+        return jsonData['algos']
+
+
+
     def _toJSON(self):
         self.JSON = {
                 "conid": int(self.conid),

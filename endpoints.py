@@ -16,5 +16,8 @@ endpoints = {
         'modify': base_url + '/iserver/account/aid/order/oid',
         'snapshot': base_url + '/iserver/marketdata/snapshot',
         'unsubscribe': base_url + '/iserver/marketdata/unsubscribe',
-        'live_orders': base_url + '/iserver/account/orders'
+        'live_orders': base_url + '/iserver/account/orders',
+        'watchlists': base_url + '/iserver/watchlists',
+        'secdefid': base_url + '/iserver/contract/coid/info',
+        'algorithms': base_url + '/iserver/contract/conid/algos'
         }
