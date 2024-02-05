@@ -99,7 +99,7 @@ def testAlgoOrder(conid):
     broker.isAuthenticated()
     broker.setAccountId()
     contract = Contract()
-    contract.fillOptDetails(conid)
+    contract.fillContractDetails(conid)
     algos = contract.getAvailableAlgos(conid)
     print(f"Available algorithms for {contract.symbol}")
     for i in range(len(algos)):
@@ -123,12 +123,12 @@ def testAlgoOrder(conid):
 
     order = Order()
     order.price = 11
-    order.orderType = 'TRAIL'
+    order.orderType = 'LMT'
     order.side = 'BUY'
-    order.trailingType = 'amt'
-    order.trailingAmount = 2
+#    order.trailingType = 'amt'
+#    order.trailingAmount = 2
     order.quantity = 1
-    order.tif = 'GTC'
+    order.tif = 'DAY'
     order.strategy = "TWAP"
     order.strategyParameters = strategyParameters 
     order.updateAccountId(broker.acctId)
@@ -148,6 +148,98 @@ def testAlgoOrder(conid):
     print(jsonReply)
     print(type(jsonReply))
 
+    orders = broker.showLiveOrders()
+
+def placeAlgoOrder():
+
+    broker = Broker()
+    broker.isAuthenticated()
+    broker.setAccountId()
+    vwapAlgoPayload = { 
+                "acctId": "U10412366",
+                "conid": 265598,
+                "cOID": "MY_VERY_UNIQUE_VWAP_ORDER_FULL_PARAMS",
+                "secType": "265598@STK",
+                "price": 186.20,
+                "orderType": "LMT",
+                "outsideRTH": False,
+                "side": "BUY",
+                "ticker": "AAPL",
+                "tif": "DAY",
+                "quantity": 1,
+                "strategy": "Vwap",
+                "strategyParameters": {
+                    "maxPctVol": 10,
+                    "startTime": "14:00:00 US/Eastern",
+                    "endTime": "10:00:00 US/Eastern",
+                    "allowPastEndTime": True,
+                    "noTakeLiq": True,
+                    "speedUp": True,
+                    "conditionalPrice": 180.21
+                    }
+                }
+    twapAlgoPayload = { 
+                "acctId": "U10412366",
+                "conid": 265598,
+                "cOID": "MY_VERY_UNIQUE_TWAP_ORDER_FULL_PARAMS",
+                "secType": "265598@STK",
+                "price": 186.20,
+                "orderType": "LMT",
+                "outsideRTH": False,
+                "side": "BUY",
+                "ticker": "AAPL",
+                "tif": "DAY",
+                "quantity": 1,
+                "strategy": "Twap",
+                "strategyParameters": {
+                    "startTime": "14:00:00 US/Eastern",
+                    "endTime": "10:00:00 US/Eastern",
+                    "allowPastEndTime": True,
+                    "catchUp": True,
+                    "conditionalPrice": 180.21
+                    }
+                }
+                
+
+    payload = {
+            "acctId": "U10412366",
+            "conid": 265598,
+            "orderType": "LMT",
+            "price": 110,
+            "listingExchange": "SMART",
+            "side": "BUY",
+            "ticker": "AAPL",
+            "tif": "GTC",
+            "quantity": 200,
+            "outsideRTH": True 
+            }
+    
+    orderPayload = {'orders': [twapAlgoPayload]}
+    jsonData = json.dumps(orderPayload, indent=4)
+    with open('validAlgoPayload.json', 'w') as outFile:
+        outFile.write(jsonData)
+        outFile.close()
+    broker.placeOrder(orderPayload)
+
+def placeSimpleOrder():
+    broker = Broker()
+    broker.isAuthenticated()
+    broker.setAccountId()
+    payload = {
+            'acctId': 'U10412366',
+            'conid': 265598,
+            'orderType': 'LMT',
+            'price': 110,
+            'listingExchange': 'SMART',
+            'side': 'BUY',
+            'ticker': 'AAPL',
+            'tif': 'GTC',
+            'quantity': 200,
+            'outsideRTH': True 
+            }
+    
+    orderPayload = {'orders': [payload]}
+    broker.placeOrder(orderPayload)
 
 
 def testWatchlists():
@@ -157,4 +249,6 @@ def testWatchlists():
     broker.showWatchlists()
 
 if __name__ == "__main__":
-    testAlgoOrder('679322318')
+#    placeSimpleOrder()
+    placeAlgoOrder()
+#    testAlgoOrder('265598')

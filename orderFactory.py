@@ -29,7 +29,21 @@ class Contract():
     def useConidExchange(self):
         return
 
-    def fillContractDetails(self):
+    def fillContractDetails(self, conid):
+        endpoint = endpoints['secdefid'].replace('coid', conid)
+        print(endpoint)
+        response = requests.get(endpoint, verify=False)
+        jsonData = json.loads(response.text)
+        print(jsonData)
+        if 'error' not in jsonData.keys():
+            self.conid = conid
+            self.symbol = jsonData['symbol']
+            self.secType = jsonData['instrument_type']
+            self.exchange = jsonData['exchange']
+            self.currency = jsonData['currency']
+        else:
+            print(jsonData['error'])
+
         return
 
     def fillOptDetails(self, conid):
@@ -106,8 +120,8 @@ class Order():
         self.parentId = ""
         self.price = "" 
         self.useAdaptive = False 
-        self.trailingType = ""
-        self.trailingAmount = ""
+#        self.trailingType = ""
+#        self.trailingAmount = ""
         self.strategy = ""
         self.strategyParameters = "" 
         self.JSON = {}
@@ -126,8 +140,8 @@ class Order():
                 "referrer": self.referrer,
                 "parentId": self.parentId,
                 "useAdaptive": self.useAdaptive,
-                "trailingType": self.trailingType,
-                "trailingAmt": self.trailingAmount,
+#                "trailingType": self.trailingType,
+#                "trailingAmt": self.trailingAmount,
                 "strategy": self.strategy,
                 "strategyParameters": self.strategyParameters
                 })
