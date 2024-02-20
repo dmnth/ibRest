@@ -3,6 +3,7 @@
 from endpoints import endpoints
 import requests
 import json
+import sys
 
 
 # Remember to make multiple contract classes, OPT, FOP etc...
@@ -28,6 +29,19 @@ class Contract():
 
     def useConidExchange(self):
         return
+
+    def searchSymbol(self):
+        endpoint = endpoints['cont_by_symbol']
+        print(endpoint)
+        params = {
+                'symbol': self.symbol,
+                'name': False,
+                'secType': 'STK'
+                }
+        response = requests.get(endpoint, 
+                verify=False, params=params)
+        print(response.text)
+        sys.exit()
 
     def fillContractDetails(self, conid):
         endpoint = endpoints['secdefid'].replace('coid', conid)

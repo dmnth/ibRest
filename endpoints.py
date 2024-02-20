@@ -19,5 +19,6 @@ endpoints = {
         'live_orders': base_url + '/iserver/account/orders',
         'watchlists': base_url + '/iserver/watchlists',
         'secdefid': base_url + '/iserver/contract/coid/info',
-        'algorithms': base_url + '/iserver/contract/conid/algos'
+        'algorithms': base_url + '/iserver/contract/conid/algos',
+        'cont_by_symbol': base_url + '/iserver/secdef/search'
         }
