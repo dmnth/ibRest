@@ -4,6 +4,8 @@ import json
 import sys
 from broker import Broker
 from orderFactory import Contract, Order
+from basicOrders import MktOrder, MarketIfTouched, MarketOnClose, MarketOnOpen, LimitOrder
+from baseContract import Contract as BaseContract
 
 def testOrderOperations():
     broker = Broker()
@@ -45,12 +47,13 @@ def testSnapshotFields():
 
     broker = Broker()
     broker.isAuthenticated()
+    broker.setAccountId()
     contract = Contract()
-    contract.fillOptDetails('679322318')
+#    contract.fillOptDetails('667220441')
     if broker.isAuthenticated() == True:
         broker.setAccountId()
-        broker.makeMdSnapshot(679322318, "31,6509,7283,7633")
-#        broker.unsubscribeMd(265598)
+        broker.makeMdSnapshot(14094, "55,58,31,6509,7283,7633")
+        broker.unsubscribeMd(667220441)
     else:
         print("Not authenticated")
 
@@ -248,7 +251,63 @@ def testWatchlists():
     broker.setAccountId()
     broker.showWatchlists()
 
+def testSymbolSearch():
+    broker = Broker()
+    broker.isAuthenticated()
+    broker.setAccountId()
+    contract = Contract()
+    contract.symbol = "AAPL"
+    contract.searchSymbol()
+
+def testCanGenerateValidOrderPayloads():
+    mktOrder = MktOrder("BUY", 1)
+    print(mktOrder)
+    print(mktOrder.__dict__)
+
+    mktIfTouched = MarketIfTouched("BUY", 1, 1) 
+    print(mktIfTouched)
+    print(mktIfTouched.__dict__)
+
+    mktOnClose = MarketOnClose("SELL", 1, 1)
+    print(mktOnClose)
+    print(mktOnClose.__dict__)
+
+    mktOnOpen = MarketOnOpen("SELL", 1, 1)
+    print(mktOnOpen)
+    print(mktOnOpen.__dict__)
+    
+    limitOrder = LimitOrder("SELL", 1, 1)
+    print(limitOrder)
+    print(limitOrder.__dict__)
+
+def testCanGenerateContractPayload():
+    contract = BaseContract("265598")
+    print(contract)
+    print(contract.__dict__)
+
+def testCanGenerateOrderPayload():
+    contract = BaseContract("265598").__dict__
+    mktOrder = MktOrder("BUY", 1).__dict__
+    print(contract, mktOrder)
+    print(type(contract))
+    print(type(mktOrder))
+    contract.update(mktOrder)
+    print(contract)
+
+def testCanPlaceOrder():
+    broker = Broker()
+    broker.isAuthenticated()
+    broker.setAccountId()
+    contract = BaseContract(265598).__dict__
+    mktOrder = MktOrder("BUY", 1).__dict__
+    contract.update(mktOrder)
+    orderPayload = {'orders': [contract] }
+    json = broker.placeOrder(orderPayload)
+    print(json)
+
+
 if __name__ == "__main__":
-#    placeSimpleOrder()
-    placeAlgoOrder()
-#    testAlgoOrder('265598')
+    testCanGenerateValidOrderPayloads()
+    testCanGenerateContractPayload()
+    testCanGenerateOrderPayload()
+    testCanPlaceOrder()
