@@ -4,8 +4,8 @@ import json
 import sys
 from broker import Broker
 from orderFactory import Contract, Order
-from basicOrders import MktOrder, MarketIfTouched, MarketOnClose, MarketOnOpen, LimitOrder
-from baseContract import Contract as BaseContract
+from basicOrders import MktOrder, LimitOrder
+from baseContract import Contract as BaseContract, Instrument
 
 def testOrderOperations():
     broker = Broker()
@@ -48,8 +48,8 @@ def testSnapshotFields():
     broker = Broker()
     broker.isAuthenticated()
     broker.setAccountId()
-    contract = Contract()
-#    contract.fillOptDetails('667220441')
+    broker.secDefParams('BMW', 'FUT')
+    sys.exit()
     if broker.isAuthenticated() == True:
         broker.setAccountId()
         broker.makeMdSnapshot(14094, "55,58,31,6509,7283,7633")
@@ -259,55 +259,51 @@ def testSymbolSearch():
     contract.symbol = "AAPL"
     contract.searchSymbol()
 
-def testCanGenerateValidOrderPayloads():
+def testOrderObject():
     mktOrder = MktOrder("BUY", 1)
     print(mktOrder)
     print(mktOrder.__dict__)
 
-    mktIfTouched = MarketIfTouched("BUY", 1, 1) 
-    print(mktIfTouched)
-    print(mktIfTouched.__dict__)
+    lmtOrder = LimitOrder("BUY", 1, 1) 
+    print(lmtOrder)
+    print(lmtOrder.__dict__)
 
-    mktOnClose = MarketOnClose("SELL", 1, 1)
-    print(mktOnClose)
-    print(mktOnClose.__dict__)
-
-    mktOnOpen = MarketOnOpen("SELL", 1, 1)
-    print(mktOnOpen)
-    print(mktOnOpen.__dict__)
-    
-    limitOrder = LimitOrder("SELL", 1, 1)
-    print(limitOrder)
-    print(limitOrder.__dict__)
-
-def testCanGenerateContractPayload():
+def testContractObject():
     contract = BaseContract("265598")
     print(contract)
     print(contract.__dict__)
 
-def testCanGenerateOrderPayload():
+def testPayload():
     contract = BaseContract("265598").__dict__
     mktOrder = MktOrder("BUY", 1).__dict__
-    print(contract, mktOrder)
-    print(type(contract))
-    print(type(mktOrder))
     contract.update(mktOrder)
     print(contract)
 
-def testCanPlaceOrder():
+def testChangeTif():
+    mktOrder = MktOrder("BUY", 1)
+    mktOrder.tif = "GTC"
+    print(mktOrder)
+    print(mktOrder.__dict__)
+
+def testPlaceOrder():
     broker = Broker()
     broker.isAuthenticated()
     broker.setAccountId()
-    contract = BaseContract(265598).__dict__
-    mktOrder = MktOrder("BUY", 1).__dict__
-    contract.update(mktOrder)
-    orderPayload = {'orders': [contract] }
-    json = broker.placeOrder(orderPayload)
-    print(json)
+    contract = BaseContract(265598)
+    mktOrder = MktOrder("BUY", 1)
+    mktOrder.tif = "GTC"
+    contract.__dict__.update(mktOrder.__dict__)
+    payload = {'orders': [contract.__dict__] }
+    print(payload)
+    broker.placeOrder(payload)
+
+def testOrderPlacementLogic():
+    testOrderObject()
+    testContractObject()
+    testChangeTif()
+    testPayload()
+    testPlaceOrder()
 
 
 if __name__ == "__main__":
-    testCanGenerateValidOrderPayloads()
-    testCanGenerateContractPayload()
-    testCanGenerateOrderPayload()
-    testCanPlaceOrder()
+    testSnapshotFields()

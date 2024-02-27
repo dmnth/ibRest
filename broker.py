@@ -8,6 +8,7 @@ import sys
 from exceptions import *
 from orderFactory import createSampleContract, createSampleOrder, createBracketOrder, Contract, Order
 from endpoints import endpoints
+from baseContract import Instrument
 
 requests.packages.urllib3.disable_warnings()
 
@@ -164,6 +165,15 @@ class Broker(Session):
         jsonRepr = json.dumps(orders, indent=4)
         with open('liveOrders.json', 'w') as outFile:
             outFile.write(jsonRepr)
+
+    def secDefParams(self, symbol, secType):
+        inst = Instrument(symbol)
+        inst.getContractsBySymbol(symbol)
+        inst.assignConid()
+        inst.setChainsJSON(secType)
+        inst.futSecDefInfo()
+        sys.exit()
+
 
     def showTrades(self, days=''):
         self.monitor.retrieveTradesHistory(days)
