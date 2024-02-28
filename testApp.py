@@ -304,6 +304,19 @@ def testOrderPlacementLogic():
     testPayload()
     testPlaceOrder()
 
+def testPositionsPerAccount():
+    broker = Broker()
+    broker.isAuthenticated()
+    broker.setAccountId()
+    broker.showPositions(pageId=0)
+
+def testCanParseCSVtoObject():
+    broker = Broker()
+    broker.isAuthenticated()
+    broker.setAccountId()
+    instrumentList = broker.namesToList('contractCsvData/worst20SPversion2.csv')
 
 if __name__ == "__main__":
-    testSnapshotFields()
+    testCanParseCSVtoObject()
+#    testPlaceOrder()
+#    testPositionsPerAccount()

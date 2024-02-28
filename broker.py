@@ -3,12 +3,13 @@
 import requests
 import json
 import time
+import csv
 import sys
 
 from exceptions import *
 from orderFactory import createSampleContract, createSampleOrder, createBracketOrder, Contract, Order
 from endpoints import endpoints
-from baseContract import Instrument
+from baseContract import Instrument, Contract
 
 requests.packages.urllib3.disable_warnings()
 
@@ -56,15 +57,29 @@ class Account():
         resp = requests.get(endpoint, verify=False) 
         jsonData = json.loads(resp.text)
         accounts = jsonData['accounts']
-        if len(accounts) > 1:
-            print("Will have to pick an account")
-            sys.exit()
-        return accounts[0]
+        print("Selected account: ", accounts[0])
+        accountId = accounts[0]
+        self.id = accountId
+        return self.id 
+#        account = input('Select account: ')
+#        while account not in accounts:
+#            account = input('Select valid account: ')
+#        return account 
 
     def getWatchlistis(self):
         endpoint = endpoints['watchlists']
         resp = requests.get(endpoint, verify=False)
         print(resp.text)
+
+    def getCurrentAccPos(self, pageId):
+        endpoint = endpoints['acc_positions']
+        print(endpoint)
+        accPositions = endpoint.replace('ACCID', self.id).replace('PAGEID', str(pageId))
+        print(accPositions)
+        response = requests.get(accPositions, verify=False)
+        jsonData = json.loads(response.text)
+        print(len(jsonData))
+        return jsonData
 
     def switch(selt):
         return
@@ -149,6 +164,7 @@ class Broker(Session):
         self.account = Account()
         self.monitor = OrderMonitor()
         self.acctId = '' 
+        self.orderQeue = []
 
     def check(self):
         Order()._Order__sampleFunction()
@@ -180,6 +196,9 @@ class Broker(Session):
 
     def setAccountId(self):
         self.acctId = self.account.getId() 
+
+    def showPositions(self, pageId):
+        self.account.getCurrentAccPos(pageId)
 
     def processOrderResponse(self, orderData):
 
@@ -270,6 +289,25 @@ class Broker(Session):
 
     def cancelOrder(self, orderId):
         return
+
+    def namesToList(self, pathToCsv):
+        instruments = []
+        with open(pathToCsv, 'r') as csvFile:
+            csvReader = csv.reader(csvFile)
+            lineCount = 0
+            for line in csvReader:
+                if lineCount == 0:
+                    lineCount += 1
+                else:
+                    compName = line[1]
+                    symb = line[0].split(' ')[0]
+                    inst = Instrument(symbol=symb, companyName=compName)
+                    print(inst.symbol, inst.companyName)
+                    inst.getContractsByName()
+                    lineCount += 1
+                
+        return instruments 
+
 
     def __repr__(self):
         return 'Main Aplication'
