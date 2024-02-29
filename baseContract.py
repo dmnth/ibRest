@@ -45,7 +45,7 @@ class OptContract(FutContract):
 
 class Instrument:
 
-    def __init__(self, symbol, companyName=''):
+    def __init__(self, symbol='', companyName=''):
         self.symbol = symbol
         self.companyName = companyName
         self.json = [] # because of reasons 
@@ -57,9 +57,9 @@ class Instrument:
     def assignBySymbol(self, sumbol):
         return
 
-    def getContractsByName(self, companyName):
+    def getContractsByName(self):
         params = {
-                'symbol': companyName, 
+                'symbol': self.companyName, 
                 'name': True,
                 'secType': ''
                 }
@@ -68,12 +68,12 @@ class Instrument:
         jsonData = json.loads(response.text) 
         if type(jsonData) != list:
             print("Returned unexpected format: ", jsonData)
-            sys.exit()
+            print(self.companyName, self.symbol)
         self.json = jsonData
 
-    def getContractsBySymbol(self, symbol):
+    def getContractsBySymbol(self):
         params = {
-                'symbol': symbol,
+                'symbol': self.symbol,
                 'name': False,
                 'secType': ''
                 }
@@ -97,7 +97,7 @@ class Instrument:
                 continue 
         if len(conids) < 1:
             print("No conids were obtained for this instrument")
-            sys.exit()
+            pass
         if len(conids) > 1:
             conid = input("Please input conid: ")
             while conid not in conids:
@@ -108,7 +108,6 @@ class Instrument:
         print(f"Chosen conid: {conid}")
 
         self.conid = conid
-        return conid
 
     def setChainsJSON(self, secType):
         # We only need part of JSON that contains

@@ -1,0 +1,32 @@
+{
+    "orders": [
+        {
+            "acctId": "U10412366",
+            "cOID": "",
+            "orderType": "LMT",
+            "outsideRTH": false,
+            "price": 11,
+            "side": "BUY",
+            "ticker": "",
+            "tif": "DAY",
+            "quantity": 1,
+            "referrer": "",
+            "parentId": "",
+            "useAdaptive": false,
+            "strategy": "TWAP",
+            "strategyParameters": {
+                "noTakeLiq": "",
+                "optoutClosingAuction": "",
+                "allowPastEndTime": "",
+                "speedUp": "",
+                "conditionalPrice": "",
+                "startTime": "",
+                "maxPctVol": "",
+                "endTime": ""
+            },
+            "conid": 265598,
+            "conidex": "",
+            "listingExchange": ""
+        }
+    ]
+}

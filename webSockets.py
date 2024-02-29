@@ -6,6 +6,7 @@ import json
 import requests
 import websockets
 import urllib3
+import sys
 
 # Uverified context is required in order to ignore certificate check
 ssl_context = ssl._create_unverified_context()
@@ -96,6 +97,16 @@ def create_SOR_req():
     msg = "sor+{}"
     return msg
 
+def hdrMsg(conID, period, barSize, source, dateFormat, startTime):
+    msg = f"hdr+{conID}+" + json.dumps({
+        "period": period,
+        "bar": barSize,
+        "source": source,
+        "format": dateFormat,
+        "startTime": startTime
+        }) 
+    return msg
+
 def create_STR_req():
     msg = 'str+{\'realtimeUpdatesOnl\': true, \'days\': \'\'}'
     return msg
@@ -129,6 +140,7 @@ async def sendMessages(msgList):
     historicalDataUnsubscribed = False
 
     async with websockets.connect("wss://" + local_ip + "/v1/api/ws", ssl=ssl_context) as websocket:
+        # Session can be initialized here by using the websocket object 
         while True:
             if len(messages) != 0:
                 # *Imitates queue* 
@@ -144,8 +156,7 @@ async def sendMessages(msgList):
                 if jsonData['topic'] == 'str':
                     with open('tradesData.json', 'w') as file:
                         json.dump(jsonData, file, indent=4)
-                        break
-                print(jsonData)
+                    print(jsonData)
 
                 if jsonData['topic'].startswith("smh+") and historicalDataUnsubscribed == False:
                     serverID = jsonData['serverId']
@@ -159,7 +170,6 @@ async def sendMessages(msgList):
 
                 if jsonData['topic'] == 'sor':
                     print(jsonData['topic'])
-                    break
 
                 if jsonData['topic'] == "sbd" and mktDepthUnsubscribed == False:
                     print(jsonData)
@@ -174,6 +184,11 @@ async def sendMessages(msgList):
                     # Keep session alive 
                     messages.append('tic')
 
+                if 'hdr' in jsonData['topic']:
+                    print("what")
+                    print(jsonData)
+
+            print(f"Incoming topic: {jsonData['topic']}")
             if 'error' in jsonData.keys():
                 print(jsonData['error'])
 
@@ -185,6 +200,12 @@ def testMktDepthRequests():
         messages.append(msg)
     asyncio.get_event_loop().run_until_complete(sendMessages(messages))
 
+def testHdrRequest():
+    hdr = hdrMsg('265598', period = '1d', barSize='1hour', source='trades',
+            dateFormat='%o/%c/%h/%l', startTime='20180205-00:00:00')
+    messages = [hdr]
+    asyncio.get_event_loop().run_until_complete(sendMessages(messages))
+
 def liveOrderUpdates():
     msg = create_STR_req()
     print(type(msg))
@@ -192,7 +213,7 @@ def liveOrderUpdates():
     asyncio.get_event_loop().run_until_complete(sendMessages(messages))
 
 def main():
-    liveOrderUpdates()
+    testHdrRequest()
 
 if __name__ == "__main__":
     urllib3.disable_warnings()

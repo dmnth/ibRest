@@ -23,52 +23,29 @@ orderString = """
 
 class BaseOrder:
 
-    def __init__(self, action, totalQuantity, orderType):
+    def __init__(self, action, totalQuantity):
 
         self.side = action
-        self.orderType = orderType
         self.quantity = totalQuantity
+        # All orders will have a default time 
+        # in force value of "DAY" because of reasons
+        self.tif = "DAY" 
 
 class MktOrder(BaseOrder):
     
-    def __init__(self, action, totalQuantity, orderType="MKT"):
-        BaseOrder.__init__(self, action, totalQuantity, orderType)
+    def __init__(self, action, totalQuantity):
+        BaseOrder.__init__(self, action, totalQuantity)
+        self.orderType = "MKT"
 
     def __repr__(self):
         return "Market order"
 
-class MarketIfTouched(BaseOrder):
-    def __init__(self, action, totalQuantity, auxPrice,
-            orderType="MIT"):
-        BaseOrder.__init__(self, action, totalQuantity, orderType)
-        self.auxPrice = auxPrice
-
-    def __repr__(self):
-        return "Market if touched"
-
-class MarketOnClose(BaseOrder):
-    
-    def __init__(self, action, totalQuantity, orderType="MOC"):
-        BaseOrder.__init__(self, action, totalQuantity, orderType)
-    
-    def __repr__(self):
-        return "Market on close"
-
-class MarketOnOpen(BaseOrder):
-    
-    def __init__(self, action, totalQuantity, orderType="MKT"):
-        BaseOrder.__init__(self, action, totalQuantity, orderType)
-        self.tif = "OPG"
-
-    def __repr__(self):
-        return "Market on open"
-
 class LimitOrder(BaseOrder):
 
-    def __init__(self, action, totalQuantity, limitPrice,
-            orderType="LMT"):
-        BaseOrder.__init__(self, action, totalQuantity, orderType)
+    def __init__(self, action, limitPrice, totalQuantity):
+        BaseOrder.__init__(self, action, totalQuantity)
+        self.orderType = "LMT"
         self.price = limitPrice
-    def __repr__(self):
-        return "Limit order"
 
+    def __repr__(self):
+        return  "Limit order"
