@@ -13,6 +13,44 @@ from baseContract import Instrument, Contract
 
 requests.packages.urllib3.disable_warnings()
 
+class ContractDetailsManager():
+
+    def __init__(self):
+
+        self.value = None
+        self.contracts = {'stocks': []} 
+
+    def stockContractsFromCSV(self, pathToCsv):
+        with open(pathToCsv, 'r') as csvFile:
+            csvReader = csv.reader(csvFile)
+            lineCount = 0
+            for line in csvReader:
+                if lineCount == 0:
+                    lineCount += 1
+                else:
+                    compName = line[1]
+                    symb = line[0].split(' ')[0]
+                    inst = Instrument(symbol=symb, companyName=compName)
+                    inst.getContractsByName()
+                    contract = inst.json
+                    self.contracts['stocks'].append(contract[0])
+                    lineCount += 1
+        return
+
+    def stokcContractsFromXLSX(self, pathToXLXS):
+        return
+
+    def writeContractsJSON(self, filename):
+        filename += '.json'
+        with open(filename, 'w') as jsonFile:
+            json.dump(self.contracts, jsonFile, indent=4)
+
+    def readJSON(self):
+        return
+
+    def readTXT(self):
+        return
+
 class OrderMonitor():
 
     def __init__(self):
@@ -164,6 +202,7 @@ class Broker(Session):
         self.account = Account()
         self.monitor = OrderMonitor()
         self.acctId = '' 
+        self.contracts = {}
         self.orderQeue = []
 
     def check(self):
@@ -221,9 +260,10 @@ class Broker(Session):
 
         return orderData 
 
-    def placeOrder(self, jsonData):
+    def placeOrder(self, contractJSON):
+        payload = {'orders': [contractJSON]}
         endpoint = endpoints['place_order'].replace('accountId', self.acctId)
-        resp = requests.post(endpoint, verify=False, json=jsonData)
+        resp = requests.post(endpoint, verify=False, json=payload)
         print("Place order response: ", resp.text, resp.status_code)
         order = json.loads(resp.text)
         orderData = self.processOrderResponse(order)
@@ -290,7 +330,7 @@ class Broker(Session):
     def cancelOrder(self, orderId):
         return
 
-    def namesToList(self, pathToCsv):
+    def namesToStkJSON(self, pathToCsv):
         instruments = []
         with open(pathToCsv, 'r') as csvFile:
             csvReader = csv.reader(csvFile)
@@ -302,12 +342,19 @@ class Broker(Session):
                     compName = line[1]
                     symb = line[0].split(' ')[0]
                     inst = Instrument(symbol=symb, companyName=compName)
-                    print(inst.symbol, inst.companyName)
                     inst.getContractsByName()
+                    contract = inst.json
+                    instruments.append(contract[0])
                     lineCount += 1
                 
         return instruments 
 
+    def readContactJSON(self, pathToJSON):
+
+        with open(pathToJSON, 'r') as InputFile:
+            contracts = json.load(InputFile)
+
+        self.contracts = contracts 
 
     def __repr__(self):
         return 'Main Aplication'

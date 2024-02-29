@@ -1,8 +1,8 @@
 {
     "orders": [
         {
-            "acctId": "U10412366",
-            "cOID": "",
+            "acctId": "DU6036902",
+            "cOID": "null",
             "orderType": "LMT",
             "outsideRTH": false,
             "price": 11,
@@ -13,16 +13,9 @@
             "referrer": "",
             "parentId": "",
             "useAdaptive": false,
-            "strategy": "TWAP",
+            "strategy": "Adaptive",
             "strategyParameters": {
-                "noTakeLiq": "",
-                "optoutClosingAuction": "",
-                "allowPastEndTime": "",
-                "speedUp": "",
-                "conditionalPrice": "",
-                "startTime": "",
-                "maxPctVol": "",
-                "endTime": ""
+                "adaptivePriority": "Normal"
             },
             "conid": 265598,
             "conidex": "",

@@ -85,6 +85,10 @@ class Instrument:
             sys.exit()
         self.json = jsonData
 
+    def setStockContract(self):
+        # Parses self.json for sectype STK, matches by company name
+        return
+
     def assignConid(self):
         conids = []
         for el in self.json:

@@ -2,7 +2,7 @@
 
 import json
 import sys
-from broker import Broker
+from broker import Broker, ContractDetailsManager
 from orderFactory import Contract, Order
 from basicOrders import MktOrder, LimitOrder
 from baseContract import Contract as BaseContract, Instrument
@@ -132,7 +132,8 @@ def testAlgoOrder(conid):
 #    order.trailingAmount = 2
     order.quantity = 1
     order.tif = 'DAY'
-    order.strategy = "TWAP"
+    order.strategy = "Adaptive"
+    order.cOID = 'null'
     order.strategyParameters = strategyParameters 
     order.updateAccountId(broker.acctId)
     order._toJSON()
@@ -144,6 +145,7 @@ def testAlgoOrder(conid):
     print(order.JSON['listingExchange'])
     orderPayload = {'orders': [order.JSON] }
     jsonFile = json.dumps(orderPayload, indent=4)
+    print(jsonFile)
     with open('algoPayload.txt', 'w') as outfile:
         outfile.write(jsonFile)
         outfile.close()
@@ -310,13 +312,30 @@ def testPositionsPerAccount():
     broker.setAccountId()
     broker.showPositions(pageId=0)
 
-def testCanParseCSVtoObject():
+def testCanStoreStkContractsJSON():
     broker = Broker()
     broker.isAuthenticated()
     broker.setAccountId()
-    instrumentList = broker.namesToList('contractCsvData/worst20SPversion2.csv')
+    conMan = ContractDetailsManager()
+    stkContractList = conMan.stockContractsFromCSV('contractCsvData/worst20SPversion2.csv')
+    conMan.writeContractsJSON('worst20SPContracts')
+
+def testPlaceMultipleOrders():
+    broker = Broker()
+    broker.isAuthenticated()
+    broker.setAccountId()
+    broker.readContactJSON('worst20SPContracts.json')
+    if len(broker.contracts['stocks']) != 0:
+        order = MktOrder("BUY", 3)
+        for stock in broker.contracts['stocks']:
+            contract = BaseContract(int(stock['conid']))
+            contract.__dict__.update(order.__dict__)
+            broker.placeOrder(contract.__dict__)
+    
 
 if __name__ == "__main__":
-    testCanParseCSVtoObject()
+#    testPlaceMultipleOrders()
+#    testCanStoreStkContractsJSON()
+#    testAlgoOrder(str(265598))
 #    testPlaceOrder()
-#    testPositionsPerAccount()
+    testPositionsPerAccount()
