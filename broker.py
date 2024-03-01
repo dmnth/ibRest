@@ -20,7 +20,7 @@ class ContractDetailsManager():
         self.value = None
         self.contracts = {'stocks': []} 
 
-    def stockContractsFromCSV(self, pathToCsv):
+    def stockContractsFromCompanyNames(self, pathToCsv):
         with open(pathToCsv, 'r') as csvFile:
             csvReader = csv.reader(csvFile)
             lineCount = 0
@@ -30,17 +30,41 @@ class ContractDetailsManager():
                 else:
                     compName = line[1]
                     symb = line[0].split(' ')[0]
-                    inst = Instrument(symbol=symb, companyName=compName)
-                    inst.getContractsByName()
-                    contract = inst.json
-                    self.contracts['stocks'].append(contract[0])
+                    try:
+                        inst = Instrument(symbol=symb, companyName=compName)
+                        inst.getContractsByName()
+                        contract = inst.json
+                        self.contracts['stocks'].append(contract[0])
+                    except NoContractsFoundForCompany:
+                        continue
                     lineCount += 1
-        return
+
+    def stockContractsFromSymbols(self, pathToCsv):
+        with open(pathToCsv, 'r') as csvFile:
+            csvReader = csv.reader(csvFile)
+            lineCount = 0
+            for line in csvReader:
+                if lineCount == 0:
+                    lineCount += 1
+                else:
+                    symb = line[0]
+                    inst = Instrument(symbol=symb, companyName='')
+                    try:
+                        if lineCount > 100:
+                            break
+                        inst.getContractsBySymbol()
+                        contract = inst.json
+                        print(contract[0])
+                        self.contracts['stocks'].append(contract[0])
+                        lineCount += 1
+                    except NoContractsFoundForSymbol:
+                        continue
 
     def stokcContractsFromXLSX(self, pathToXLXS):
         return
 
-    def writeContractsJSON(self, filename):
+    def writeJSON(self, filename):
+        # Should be defined as helper method as used everywhere
         filename += '.json'
         with open(filename, 'w') as jsonFile:
             json.dump(self.contracts, jsonFile, indent=4)
@@ -116,8 +140,16 @@ class Account():
         print(accPositions)
         response = requests.get(accPositions, verify=False)
         jsonData = json.loads(response.text)
+        print(type(jsonData))
         print(len(jsonData))
+        with open('positions.json', 'w') as outFile:
+            json.dump(jsonData, outFile, indent=4)
         return jsonData
+
+    def getAccounts(self):
+        response = requests.get(endpoints['portfolio_acc'], verify=False)
+        jsonData = json.loads(response.text)
+        print(jsonData)
 
     def switch(selt):
         return
@@ -266,8 +298,17 @@ class Broker(Session):
         resp = requests.post(endpoint, verify=False, json=payload)
         print("Place order response: ", resp.text, resp.status_code)
         order = json.loads(resp.text)
-        orderData = self.processOrderResponse(order)
-        return orderData
+        try:
+            if order['error'] == 'No trading permissions.':
+                print('triggered try except, exiting')
+                raise NoTradingPermissionError
+            else:
+                print("NEW ERROR MESSAGE")
+                print(order['error'])
+                # Save error messages with order object JSON
+        except TypeError:
+            orderData = self.processOrderResponse(order)
+            return orderData
 
     def confirmOrder(self, replyId):
         endpoint = endpoints['reply'].replace('replyId', replyId)
@@ -327,27 +368,11 @@ class Broker(Session):
     def showWatchlists(self):
         self.account.getWatchlistis()
 
+    def showAccounts(self):
+        self.account.getAccounts()
+
     def cancelOrder(self, orderId):
         return
-
-    def namesToStkJSON(self, pathToCsv):
-        instruments = []
-        with open(pathToCsv, 'r') as csvFile:
-            csvReader = csv.reader(csvFile)
-            lineCount = 0
-            for line in csvReader:
-                if lineCount == 0:
-                    lineCount += 1
-                else:
-                    compName = line[1]
-                    symb = line[0].split(' ')[0]
-                    inst = Instrument(symbol=symb, companyName=compName)
-                    inst.getContractsByName()
-                    contract = inst.json
-                    instruments.append(contract[0])
-                    lineCount += 1
-                
-        return instruments 
 
     def readContactJSON(self, pathToJSON):
 

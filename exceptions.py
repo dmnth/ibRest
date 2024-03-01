@@ -18,3 +18,20 @@ class CompetingSessionException(Exception):
     # is raised if there is a competing session running. Only one session
     # is allowed per username
     pass
+
+# Contract related issues
+
+class NoContractsFoundForSymbol(Exception):
+    # Is raised when search by symbol returned no results
+    pass
+
+class NoContractsFoundForCompany(Exception):
+    # Is raised when search by company name returned no results
+    pass
+
+# Trading related exceptions:
+
+class NoTradingPermissionError(Exception):
+    # is triggered if account is not configured with relevant trading
+    # permissions
+    pass

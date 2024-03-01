@@ -6,6 +6,7 @@ from broker import Broker, ContractDetailsManager
 from orderFactory import Contract, Order
 from basicOrders import MktOrder, LimitOrder
 from baseContract import Contract as BaseContract, Instrument
+from exceptions import NoTradingPermissionError
 
 def testOrderOperations():
     broker = Broker()
@@ -310,28 +311,47 @@ def testPositionsPerAccount():
     broker = Broker()
     broker.isAuthenticated()
     broker.setAccountId()
+    broker.showAccounts()
     broker.showPositions(pageId=0)
 
-def testCanStoreStkContractsJSON():
+def testCanStoreStkContractsFromCompNamesJSON():
     broker = Broker()
     broker.isAuthenticated()
     broker.setAccountId()
     conMan = ContractDetailsManager()
-    stkContractList = conMan.stockContractsFromCSV('contractCsvData/worst20SPversion2.csv')
-    conMan.writeContractsJSON('worst20SPContracts')
+    stkContractList = conMan.stockContractsFromCompanyNames('contractCsvData/worst20SPversion2.csv')
+    conMan.writeJSON('worst20SPContracts')
 
-def testPlaceMultipleOrders():
+def testStoreContractsFromSymbol():
     broker = Broker()
     broker.isAuthenticated()
     broker.setAccountId()
-    broker.readContactJSON('worst20SPContracts.json')
+    conMan = ContractDetailsManager()
+    stkContractList = conMan.stockContractsFromSymbols('contractCsvData/EU_tickers.csv')
+    conMan.writeJSON('EU_tickers')
+
+def testPlaceMultipleOrders():
+    #readContactJSON useses search by company name
+    broker = Broker()
+    broker.isAuthenticated()
+    broker.setAccountId()
+    broker.readContactJSON('EU_tickers.json')
     if len(broker.contracts['stocks']) != 0:
         order = MktOrder("BUY", 3)
         for stock in broker.contracts['stocks']:
             contract = BaseContract(int(stock['conid']))
             contract.__dict__.update(order.__dict__)
-            broker.placeOrder(contract.__dict__)
+            try:
+                broker.placeOrder(contract.__dict__)
+            except NoTradingPermissionError:
+                print(f"---> Skipping: No trading permissions for {contract}")
+                continue
     
+def contractDetailsBySymbol():
+    broker = Broker()
+    broker.isAuthenticated()
+    broker.setAccountId()
+
 
 if __name__ == "__main__":
 #    testPlaceMultipleOrders()
@@ -339,3 +359,4 @@ if __name__ == "__main__":
 #    testAlgoOrder(str(265598))
 #    testPlaceOrder()
     testPositionsPerAccount()
+#    testStoreContractsFromSymbol()

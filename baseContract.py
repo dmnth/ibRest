@@ -4,6 +4,7 @@ import requests
 import sys
 import json
 from endpoints import endpoints
+from exceptions import NoContractsFoundForSymbol
 
 contractString = """
         # Provide only conid or conidex field
@@ -75,14 +76,13 @@ class Instrument:
         params = {
                 'symbol': self.symbol,
                 'name': False,
-                'secType': ''
+                'secType': 'STK'
                 }
         response = requests.get(endpoints['cont_by_symbol'],
                 params=params, verify=False)
         jsonData = json.loads(response.text) 
         if type(jsonData) != list:
-            print("Returned unexpected format: ", jsonData)
-            sys.exit()
+            raise NoContractsFoundForSymbol
         self.json = jsonData
 
     def setStockContract(self):
