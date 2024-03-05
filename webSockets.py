@@ -141,6 +141,17 @@ async def sendMessages(msgList):
 
     async with websockets.connect("wss://" + local_ip + "/v1/api/ws", ssl=ssl_context) as websocket:
         # Session can be initialized here by using the websocket object 
+
+        rst = await websocket.recv()
+        jsonData = json.loads(rst.decode())
+        try:
+            if jsonData['message'] == 'waiting for session':
+                print('No active sessions found. Are you logged in?')
+                sys.exit()
+        except KeyError:
+            print(f"First received message: {jsonData}")
+            pass
+
         while True:
             if len(messages) != 0:
                 # *Imitates queue* 
@@ -150,6 +161,7 @@ async def sendMessages(msgList):
 
             rst = await websocket.recv()
             jsonData = json.loads(rst.decode())
+
 
             if 'topic' in jsonData.keys():
 
@@ -213,8 +225,11 @@ def liveOrderUpdates():
     asyncio.get_event_loop().run_until_complete(sendMessages(messages))
 
 def main():
-    testHdrRequest()
+    testMktDepthRequests()
 
 if __name__ == "__main__":
     urllib3.disable_warnings()
-    main()
+    try:
+        main()
+    except ConnectionRefusedError:
+        print(f"Connection refused at {local_ip}, is the gateway running?")
