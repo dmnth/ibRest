@@ -133,12 +133,25 @@ class Account():
         resp = requests.get(endpoint, verify=False)
         print(resp.text)
 
+    def invalidatePositions(self):
+        endpoint = endpoints['inv_positions']
+        invEndpoint = endpoint.replace('ACCID', self.id)
+        response = requests.post(invEndpoint, verify=False)
+        jsonData = json.loads(response.text)
+        try:
+            if jsonData['message'] == 'success':
+                print('Succesfully invalidated positions')
+        except KeyError as err:
+            print("Invalidation failed")
+
     def getCurrentAccPos(self, pageId):
+        self.getAccounts()
         endpoint = endpoints['acc_positions']
         print(endpoint)
+        params = {"model": '', 'size': '10', 'sort': 'a', 'direction': 'a', 'period': '1D'}
         accPositions = endpoint.replace('ACCID', self.id).replace('PAGEID', str(pageId))
         print(accPositions)
-        response = requests.get(accPositions, verify=False)
+        response = requests.get(accPositions, verify=False, params=params)
         jsonData = json.loads(response.text)
         print(type(jsonData))
         print(len(jsonData))

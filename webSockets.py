@@ -7,6 +7,8 @@ import requests
 import websockets
 import urllib3
 import sys
+from datetime import datetime as dt
+import arrow
 
 # Uverified context is required in order to ignore certificate check
 ssl_context = ssl._create_unverified_context()
@@ -69,7 +71,7 @@ def getContractDetails(conId):
 # Streaming data request, accepts comma-separated values
 def create_SMD_req(conId, args: str):
     args = args.split(',')
-    msg = "smd+" + conId + '+' + '{"fields":["31","83"]}'
+#    msg = "smd+" + conId + '+' + '{"fields":["31","83"]}'
     msg = "smd+" + conId + '+' + json.dumps({"fields":args})
     return msg
 
@@ -190,6 +192,15 @@ async def sendMessages(msgList):
 #                    messages.append(msg)
 #                    mktDepthUnsubscribed = True
 #                    print("Market depth data was unsubscribed")
+                
+                if jsonData['topic'].startswith('smd'):
+                    timestamp = jsonData['_updated']
+                    updateTime = arrow.get(timestamp).datetime
+                    timeNow = dt.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+                    print("INCOMING")
+                    print(f'Updated at: {updateTime}')
+                    print(f'Received at: {timeNow}')
+                    print("END")
 
 
                 if jsonData['topic'] == "system": 
@@ -200,7 +211,6 @@ async def sendMessages(msgList):
                     print("what")
                     print(jsonData)
 
-            print(f"Incoming topic: {jsonData['topic']}")
             if 'error' in jsonData.keys():
                 print(jsonData['error'])
 
@@ -224,8 +234,14 @@ def liveOrderUpdates():
     messages = [msg]
     asyncio.get_event_loop().run_until_complete(sendMessages(messages))
 
+def liveMarketData():
+    msg = create_SMD_req('320227571', '31,38')
+    print(type(msg))
+    messages = [msg]
+    asyncio.get_event_loop().run_until_complete(sendMessages(messages))
+
 def main():
-    testMktDepthRequests()
+    liveMarketData()
 
 if __name__ == "__main__":
     urllib3.disable_warnings()

@@ -312,7 +312,9 @@ def testPositionsPerAccount():
     broker.isAuthenticated()
     broker.setAccountId()
     broker.showAccounts()
-    broker.showPositions(pageId=0)
+#    broker.account.invalidatePositions()
+    broker.showPositions(pageId=1)
+#    broker.showPositions(pageId=0)
 
 def testCanStoreStkContractsFromCompNamesJSON():
     broker = Broker()
