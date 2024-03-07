@@ -330,14 +330,18 @@ def testStoreContractsFromSymbol():
     broker.setAccountId()
     conMan = ContractDetailsManager()
     stkContractList = conMan.stockContractsFromSymbols('contractCsvData/EU_tickers.csv')
-    conMan.writeJSON('EU_tickers')
+    conMan.writeJSON('EU_tickers_500')
 
 def testPlaceMultipleOrders():
     #readContactJSON useses search by company name
+    # Need to count orders that were not placed due to
+    # reasonse ...
+    # Add 500 http error message exception
     broker = Broker()
     broker.isAuthenticated()
     broker.setAccountId()
-    broker.readContactJSON('EU_tickers.json')
+    broker.readContactJSON('EU_tickers_500.json')
+    counter = 0
     if len(broker.contracts['stocks']) != 0:
         order = MktOrder("BUY", 3)
         for stock in broker.contracts['stocks']:
@@ -345,9 +349,11 @@ def testPlaceMultipleOrders():
             contract.__dict__.update(order.__dict__)
             try:
                 broker.placeOrder(contract.__dict__)
+                counter += 1
             except NoTradingPermissionError:
-                print(f"---> Skipping: No trading permissions for {contract}")
+                print(f"---> Skipping: No trading permissions for {contract.conid}")
                 continue
+    print(f"Placed {counter} orders")
     
 def contractDetailsBySymbol():
     broker = Broker()
@@ -356,9 +362,8 @@ def contractDetailsBySymbol():
 
 
 if __name__ == "__main__":
-#    testPlaceMultipleOrders()
-#    testCanStoreStkContractsJSON()
+    testPlaceMultipleOrders()
 #    testAlgoOrder(str(265598))
 #    testPlaceOrder()
-    testPositionsPerAccount()
+#    testPositionsPerAccount()
 #    testStoreContractsFromSymbol()

@@ -50,7 +50,7 @@ class ContractDetailsManager():
                     symb = line[0]
                     inst = Instrument(symbol=symb, companyName='')
                     try:
-                        if lineCount > 100:
+                        if lineCount > 500:
                             break
                         inst.getContractsBySymbol()
                         contract = inst.json
@@ -334,7 +334,7 @@ class Broker(Session):
             print("Outcoming: ", jsonData)
             if type(jsonData) == dict and 'error' in jsonData.keys():
                 print("error: ", jsonData['error'])
-                sys.exit()
+                raise NoTradingPermissionError
 
             message = jsonData[0]
     
