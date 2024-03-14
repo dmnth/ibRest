@@ -1,0 +1,15 @@
+Your account has a minimum of 15 orders working on either the buy or sell side for this particular contract. An additional order on the same side for this contract will not be allowed until an existing order has been cancelled or has executed. Please call the Trade Desk for further details.
+No Trading Permission, Customer Ineligible; Ineligibility reasons: 
+Only closing orders are permitted in this instrument.
+No Trading Permission, Customer Ineligible; Ineligibility reasons: 
+No opening trades: NSE stock has non-EQ segment
+No Trading Permission, Customer Ineligible; Ineligibility reasons: 
+Restricted: request Complex or Leveraged Exchange Trading Product permissions for trading. To close existing position - use Close button; see FAQ 84620875
+No Trading Permission, Customer Ineligible; Ineligibility reasons: 
+Only closing orders are permitted in this instrument.
+Restricted: LSE segment not supported, 
+No Opening Trades: Corporate Action
+No opening trades: PURE microcap
+Trading in OTC Grey Market stocks is not supported.
+YOUR ORDER IS NOT ACCEPTED. IN ORDER TO OBTAIN THE DESIRED POSITION YOUR EQUITY WITH LOAN VALUE [119634.24 GBP] MUST EXCEED THE INITIAL MARGIN [122973.83 GBP]
+YOUR ORDER IS NOT ACCEPTED. IN ORDER TO OBTAIN THE DESIRED POSITION YOUR EQUITY WITH LOAN VALUE [119435.93 GBP] MUST EXCEED THE INITIAL MARGIN [123126.33 GBP]

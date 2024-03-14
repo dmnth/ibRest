@@ -7,9 +7,11 @@ import csv
 import sys
 
 from exceptions import *
+from json.decoder import JSONDecodeError
 from orderFactory import createSampleContract, createSampleOrder, createBracketOrder, Contract, Order
 from endpoints import endpoints
 from baseContract import Instrument, Contract
+from errorParser import errorHandler
 
 requests.packages.urllib3.disable_warnings()
 
@@ -310,18 +312,28 @@ class Broker(Session):
         endpoint = endpoints['place_order'].replace('accountId', self.acctId)
         resp = requests.post(endpoint, verify=False, json=payload)
         print("Place order response: ", resp.text, resp.status_code)
-        order = json.loads(resp.text)
-        try:
-            if order['error'] == 'No trading permissions.':
-                print('triggered try except, exiting')
-                raise NoTradingPermissionError
-            else:
-                print("NEW ERROR MESSAGE")
-                print(order['error'])
-                # Save error messages with order object JSON
-        except TypeError:
-            orderData = self.processOrderResponse(order)
-            return orderData
+        if resp.status_code == 200:
+            order = json.loads(resp.text)
+            try:
+                if order['error']:
+                    # Parse the error JSON here
+                    errorHandler(order)
+            except JSONDecodeError:
+                print('Faulty response object that raised JSONDecodeError: ')
+                print(response.text)
+                sys.exit
+            except TypeError:
+                # Process response if no error in payload keys
+                orderData = self.processOrderResponse(order)
+                return orderData
+        if resp.status_code == '500':
+            print("Writing faulty JSON that triggered 500")
+            print("Please spend time realising what has gone wrong")
+            print(contractJSON)
+            time.sleep(10)
+            with open('errors/500ErrorPayload.json') as outfile:
+                outfile.dump(contractJSON, outfile, indent=4)
+            raise IntenalServerError
 
     def confirmOrder(self, replyId):
         endpoint = endpoints['reply'].replace('replyId', replyId)
@@ -330,13 +342,18 @@ class Broker(Session):
         while 'order_id' not in message.keys():
             print("Incoming: ", message)
             response = requests.post(endpoint, verify=False, json=data)
-            jsonData = json.loads(response.text)
-            print("Outcoming: ", jsonData)
-            if type(jsonData) == dict and 'error' in jsonData.keys():
-                print("error: ", jsonData['error'])
-                raise NoTradingPermissionError
-
-            message = jsonData[0]
+            try:
+                jsonData = json.loads(response.text)
+                print("Outcoming: ", jsonData)
+                if jsonData['error']:
+                    # Parse the error JSON here
+                    errorHandler(jsonData)
+            except TypeError:
+                message = jsonData[0]
+            except json.decoder.JSONDecodeError:
+                print('Faulty response object that raised JSONDecodeError: ')
+                print(response.text)
+                sys.exit
     
         return message
 

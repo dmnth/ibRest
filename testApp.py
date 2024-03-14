@@ -6,7 +6,7 @@ from broker import Broker, ContractDetailsManager
 from orderFactory import Contract, Order
 from basicOrders import MktOrder, LimitOrder
 from baseContract import Contract as BaseContract, Instrument
-from exceptions import NoTradingPermissionError
+from exceptions import NoTradingPermissionError, OrderRejectedDueToReasons, InternalServerError
 
 def testOrderOperations():
     broker = Broker()
@@ -353,6 +353,19 @@ def testPlaceMultipleOrders():
             except NoTradingPermissionError:
                 print(f"---> Skipping: No trading permissions for {contract.conid}")
                 continue
+            except OrderRejectedDueToReasons:
+                print(f"---> Skipping: Order rejected by the system {contract.conid}")
+                continue
+
+            except InternalServerError:
+                print("---> Skipping Internal Server Error raised by {contract}")
+                print("---> Writing faulty contract json to output")
+                with open('errors/500ErrorPayload.json', 'a') as outfile:
+                    outfile.dump(contract, outfile, indent=4)
+                time.sleep(5)
+                # Try placing same order again
+                # java.lang error is returned on some occasion
+                continue
     print(f"Placed {counter} orders")
     
 def contractDetailsBySymbol():
@@ -360,10 +373,33 @@ def contractDetailsBySymbol():
     broker.isAuthenticated()
     broker.setAccountId()
 
+def testCFDfromSymbol():
+    broker = Broker()
+    broker.isAuthenticated()
+    broker.setAccountId()
+    inst = Instrument("AAPL")
+    inst.getContractsBySymbol()
+    inst.showFoundContracts()
+    inst.getCFDContractId("NASDAQ")
+    if inst.conid:
+        contract = BaseContract(int(inst.conid))
+        order = MktOrder("BUY", 3)
+        contract.__dict__.update(order.__dict__)
+        print(contract.__dict__)
+        try:
+            broker.placeOrder(contract.__dict__)
+        except OrderRejectedDueToReasons:
+            print("KONIEC")
+        sys.exit()
+    else:
+        print("no cfd found")
+
+
 
 if __name__ == "__main__":
-    testPlaceMultipleOrders()
+#    testPlaceMultipleOrders()
 #    testAlgoOrder(str(265598))
 #    testPlaceOrder()
 #    testPositionsPerAccount()
 #    testStoreContractsFromSymbol()
+    testCFDfromSymbol()

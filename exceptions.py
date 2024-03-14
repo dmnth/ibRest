@@ -35,3 +35,16 @@ class NoTradingPermissionError(Exception):
     # is triggered if account is not configured with relevant trading
     # permissions
     pass
+
+class OrderRejectedClosingOnly(Exception):
+    # Triggered if positions for the instrument can
+    # only be closed, no new positions can be opened
+    pass
+
+class OrderRejectedDueToReasons(Exception):
+    # Because this is the way
+    pass
+
+class InternalServerError(Exception):
+    # 500 code returned from the server
+    pass

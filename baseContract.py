@@ -26,7 +26,7 @@ class Contract:
         self.conid = conid
 
     def __repr__(self):
-        return "Basic contract sample"
+        return f"Conid: {self.conid}"
 
 class FutContract(Contract):
     
@@ -76,7 +76,7 @@ class Instrument:
         params = {
                 'symbol': self.symbol,
                 'name': False,
-                'secType': 'STK'
+                'secType': ''
                 }
         response = requests.get(endpoints['cont_by_symbol'],
                 params=params, verify=False)
@@ -88,6 +88,23 @@ class Instrument:
     def setStockContract(self):
         # Parses self.json for sectype STK, matches by company name
         return
+
+    def showFoundContracts(self):
+        for el in self.json:
+            print(el, '\n')
+    
+    def getCFDContractId(self, exchange):
+        for el in self.json:
+            if el['description'] == exchange:
+                try:
+                    sections = el['sections']
+                    for sec in sections:
+                        if sec['secType'] == 'CFD':
+                            self.conid = sec['conid']
+                            break
+                except KeyError:
+                    print(f"No CFD's for {self.symbol} at {exchange}")
+
 
     def assignConid(self):
         conids = []
