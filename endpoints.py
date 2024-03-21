@@ -26,4 +26,5 @@ endpoints = {
         'portfolio_acc': base_url + '/portfolio/accounts',
         'acc_positions': base_url + '/portfolio/ACCID/positions/PAGEID',
         'inv_positions': base_url + '/portfolio/ACCID/positions/invalidate',
+        'whatif': base_url + '/iserver/account/ACCID/orders/whatif',
         }

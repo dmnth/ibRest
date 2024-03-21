@@ -374,6 +374,33 @@ class Broker(Session):
         orderData = self.processOrderResponse(order)
         print("Modification: ", orderData)
 
+    def whatIfplaceOrder(self, orderJson):
+        payload = {'orders': [orderJson]}
+        endpoint = endpoints['whatif'].replace('ACCID', self.acctId)
+        resp = requests.post(endpoint, verify=False, json=payload)
+        if resp.status_code == 200:
+            order = json.loads(resp.text)
+            try:
+                if order['error']:
+                    # Parse the error JSON here
+                    errorHandler(order)
+            except JSONDecodeError:
+                print('Faulty response object that raised JSONDecodeError: ')
+                print(response.text)
+                sys.exit
+            except TypeError:
+                # Process response if no error in payload keys
+                orderData = self.processOrderResponse(order)
+                return orderData
+        if resp.status_code == 500:
+            print(f'[ERROR 500] {resp.text} - {orderJson}')
+            errorObject = json.loads(resp.text)
+            if errorObject['error'] == 'TIMEOUT':
+                print('TIMEOUT HAS REACHED')
+                raise TimeoutError
+            with open('errors/500ErrorPayload.json', 'a') as outfile:
+                json.dump(orderJson, outfile, indent=4)
+
     def makeMdSnapshot(self, conids, fields, since=""):
         params = {
                 "conids": conids,
@@ -385,7 +412,11 @@ class Broker(Session):
             time.sleep(1)
             response = requests.get(endpoints['snapshot'], params=params, verify=False)
             jsonData = json.loads(response.text)
-            print(jsonData)
+            ticks = jsonData[0]
+            try:
+                print(f"LAST: {ticks['31']} - BID: {ticks['84']} - ASK: {ticks['86']}")
+            except KeyError:
+                continue
 
         return
 

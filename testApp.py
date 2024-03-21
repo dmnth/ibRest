@@ -44,17 +44,14 @@ def testBracketOrder():
 
     broker.placeOrder(orderPayload)
 
-def testSnapshotFields():
+def testSnapshotFields(flds: str):
 
     broker = Broker()
     broker.isAuthenticated()
     broker.setAccountId()
-    broker.secDefParams('BMW', 'FUT')
-    sys.exit()
     if broker.isAuthenticated() == True:
         broker.setAccountId()
-        broker.makeMdSnapshot(14094, "55,58,31,6509,7283,7633")
-        broker.unsubscribeMd(667220441)
+        broker.makeMdSnapshot(14094, flds)
     else:
         print("Not authenticated")
 
@@ -394,12 +391,37 @@ def testCFDfromSymbol():
     else:
         print("no cfd found")
 
-
-
+def testWhatIfTimeouts():
+    broker = Broker()
+    broker.isAuthenticated()
+    broker.setAccountId()
+    contract = BaseContract(265598)
+    mktOrder = MktOrder("BUY", 1)
+    mktOrder.tif = "GTC"
+    contract.__dict__.update(mktOrder.__dict__)
+    payload = contract.__dict__
+    broker.whatIfplaceOrder(payload)
+    broker.readContactJSON('EU_tickers_500.json')
+    counter = 0
+    if len(broker.contracts['stocks']) != 0:
+        order = MktOrder("BUY", 3)
+        while True:
+            for stock in broker.contracts['stocks']:
+                contract = BaseContract(int(stock['conid']))
+                contract.__dict__.update(order.__dict__)
+                try:
+                    broker.whatIfplaceOrder(contract.__dict__)
+                    counter += 1
+                except InternalServerError:
+                    print('Internal server error')
+                except TimeoutError:
+                    print(f'timed out with {counter} whatifs')
+    print(f"finished going through {counter} whatif's")
+    
 if __name__ == "__main__":
-#    testPlaceMultipleOrders()
-#    testAlgoOrder(str(265598))
-#    testPlaceOrder()
-#    testPositionsPerAccount()
-#    testStoreContractsFromSymbol()
-    testCFDfromSymbol()
+
+#    testWhatIfTimeouts()
+    with open('sillyTests/sillyStringOfFields.txt', 'r') as inpFile:
+        fields = inpFile.read()
+        print(fields)
+    testSnapshotFields(fields)
