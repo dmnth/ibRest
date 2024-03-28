@@ -12,6 +12,7 @@ from orderFactory import createSampleContract, createSampleOrder, createBracketO
 from endpoints import endpoints
 from baseContract import Instrument, Contract
 from errorParser import errorHandler
+from json.decoder import JSONDecodeError
 
 requests.packages.urllib3.disable_warnings()
 
@@ -326,7 +327,7 @@ class Broker(Session):
                 # Process response if no error in payload keys
                 orderData = self.processOrderResponse(order)
                 return orderData
-        if resp.status_code == '500':
+        if resp.status_code == 500:
             print("Writing faulty JSON that triggered 500")
             print("Please spend time realising what has gone wrong")
             print(contractJSON)
@@ -425,6 +426,29 @@ class Broker(Session):
         response = requests.post(endpoints['unsubscribe'], data=data, verify=False)
         print("Unsubscribed: ", response.text)
         return
+
+    def getHistory(self, conid, exchange, period, bar, startTime, outsideRth):
+        endpoint = endpoints['history']
+        params = {
+                'conid': conid,
+                'exchange': exchange,
+                'period': period,
+                'bar': bar,
+                'startTime': startTime,
+                'outsideRth': outsideRth
+                }
+        response = requests.get(endpoint, params=params, verify=False)
+        try:
+            jsonData = json.loads(response.text)
+            if 'error' in jsonData.keys():
+                errorHandler(jsonData) 
+            with open('historicalSample.json', 'w') as outfile:
+                json.dump(jsonData, outfile, indent=4)
+                print('data stored')
+                outfile.close()
+        except JSONDecodeError:
+            print('---> Empty response')
+            print(f'---> Response length: {len(response.text)}')
 
     def showWatchlists(self):
         self.account.getWatchlistis()

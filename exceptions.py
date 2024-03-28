@@ -48,3 +48,12 @@ class OrderRejectedDueToReasons(Exception):
 class InternalServerError(Exception):
     # 500 code returned from the server
     pass
+
+class JavaLangException(Exception):
+    # Is triggered when contract is not found
+    # Who knows when else...
+    pass
+
+class TooManyHistoricalRequests(Exception):
+    # Is triggered once the limit of 10 requests per second breached
+    pass

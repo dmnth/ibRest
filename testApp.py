@@ -6,7 +6,7 @@ from broker import Broker, ContractDetailsManager
 from orderFactory import Contract, Order
 from basicOrders import MktOrder, LimitOrder
 from baseContract import Contract as BaseContract, Instrument
-from exceptions import NoTradingPermissionError, OrderRejectedDueToReasons, InternalServerError
+from exceptions import * 
 
 def testOrderOperations():
     broker = Broker()
@@ -363,6 +363,14 @@ def testPlaceMultipleOrders():
                 # Try placing same order again
                 # java.lang error is returned on some occasion
                 continue
+
+            except JavaLangException:
+                print(f"---> Skipping due to no contract details {contract.conid}")
+                # Write the faulty contract
+                with open('javaLangException.json', 'w') as outFile:
+                    json.dump(contract, outfile, indent=4)
+                    outfile.close()
+                continue
     print(f"Placed {counter} orders")
     
 def contractDetailsBySymbol():
@@ -417,11 +425,26 @@ def testWhatIfTimeouts():
                 except TimeoutError:
                     print(f'timed out with {counter} whatifs')
     print(f"finished going through {counter} whatif's")
+
+def testHistoricalData():
+    period = sys.argv[1]
+    barSize = sys.argv[2]
+    print(period)
+    broker = Broker()
+    broker.isAuthenticated()
+    broker.setAccountId()
+    try:
+        broker.getHistory('272093', exchange= 'NASDAQ', period=period, 
+                bar=barSize, startTime='20220327-09:30:00', outsideRth=False)
+    except TooManyHistoricalRequests:
+        print("Too many historical requests, please wait and try again later")
+        sys.exit()
     
 if __name__ == "__main__":
 
+    testHistoricalData()
 #    testWhatIfTimeouts()
-    with open('sillyTests/sillyStringOfFields.txt', 'r') as inpFile:
-        fields = inpFile.read()
-        print(fields)
-    testSnapshotFields(fields)
+#    with open('sillyTests/sillyStringOfFields.txt', 'r') as inpFile:
+#        fields = inpFile.read()
+#        print(fields)
+#    testSnapshotFields(fields)

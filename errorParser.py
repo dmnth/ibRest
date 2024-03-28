@@ -2,7 +2,7 @@
 
 import json
 import sys
-from exceptions import OrderRejectedDueToReasons, NoTradingPermissionError
+from exceptions import * 
 
 rejectionReasons = open('errors/rejectionReasons.txt', 'r').read().split('\n')
 
@@ -14,6 +14,9 @@ def errorHandler(responseJSON):
 
     if responseJSON['error'].startswith('java.lang.Exception'):
         raise JavaLangException
+
+    if responseJSON['error'] == "Too many history charts requests, please try again later.":
+        raise TooManyHistoricalRequests
 
     try:
 
