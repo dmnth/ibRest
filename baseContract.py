@@ -161,7 +161,21 @@ class Instrument:
         print(contract.__dict__)
         response = requests.get(endpoints['secDef_by_cid']
                 , params=contract.__dict__, verify=False)
-        print(response.text)
+        self.json = json.loads(response.text)
+
+    def getTradingSchedule(self,assetClass, symbol, exchange, exhchangeFilter=''):
+        endpoint = endpoints['tradingSchedule']
+        params = {
+                'assetClass': assetClass,
+                'exchange': exchange,
+                'symbol': symbol,
+                'exhchangeFilter': exhchangeFilter,
+                }
+        resp = requests.get(endpoint, params=params, verify=False)
+        jsonData = json.loads(resp.text)
+        for el in jsonData:
+            print(el)
+
 
     def futSecDefInfo(self):
         # Will build chains from JSON that is assigned per secType on class level

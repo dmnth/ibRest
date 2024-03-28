@@ -319,6 +319,12 @@ class Broker(Session):
                 if order['error']:
                     # Parse the error JSON here
                     errorHandler(order)
+
+            except TypeError:
+                error = order[0]
+                print('########################################')
+                print(error)
+                print('for some reason error came in in format of a list')
             except JSONDecodeError:
                 print('Faulty response object that raised JSONDecodeError: ')
                 print(response.text)
@@ -335,6 +341,11 @@ class Broker(Session):
             with open('errors/500ErrorPayload.json') as outfile:
                 outfile.dump(contractJSON, outfile, indent=4)
             raise IntenalServerError
+
+        if resp.status_code == 405:
+            print("405 in a workflow. Who you gonna call?")
+            time.sleep(5)
+            print('/iserver/auth/status')
 
     def confirmOrder(self, replyId):
         endpoint = endpoints['reply'].replace('replyId', replyId)

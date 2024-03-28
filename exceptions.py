@@ -1,5 +1,8 @@
 #! /usr/bin/env python3
 
+# One day i will remove exceptions that cover more than one unique case,
+# i promise.
+
 class NotLoggedIn(Exception):
     # Is triggered if user is unauthenticated 
     # Either was not logged in or session timed out
@@ -56,4 +59,8 @@ class JavaLangException(Exception):
 
 class TooManyHistoricalRequests(Exception):
     # Is triggered once the limit of 10 requests per second breached
+    pass
+
+class NotAllowedOutsideRTH(Exception):
+    # Not all orders can be placed outside regular trading hours
     pass

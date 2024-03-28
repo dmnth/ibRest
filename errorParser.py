@@ -18,6 +18,9 @@ def errorHandler(responseJSON):
     if responseJSON['error'] == "Too many history charts requests, please try again later.":
         raise TooManyHistoricalRequests
 
+    if responseJSON['error'] == "invalid order attribute : Outside Regular Trading Hours": 
+        raise NotAllowedOutsideRTH
+
     try:
 
         rsn = responseJSON['cqe']['post_payload']['rejections']

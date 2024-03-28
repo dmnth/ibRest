@@ -7,6 +7,11 @@ from orderFactory import Contract, Order
 from basicOrders import MktOrder, LimitOrder
 from baseContract import Contract as BaseContract, Instrument
 from exceptions import * 
+    
+def basicConnectionTest():
+    broker = Broker()
+    broker.isAuthenticated()
+    broker.setAccountId()
 
 def testOrderOperations():
     broker = Broker()
@@ -285,7 +290,7 @@ def testChangeTif():
     print(mktOrder)
     print(mktOrder.__dict__)
 
-def testPlaceOrder():
+def testPlaceMktOrder(conid):
     broker = Broker()
     broker.isAuthenticated()
     broker.setAccountId()
@@ -293,9 +298,38 @@ def testPlaceOrder():
     mktOrder = MktOrder("BUY", 1)
     mktOrder.tif = "GTC"
     contract.__dict__.update(mktOrder.__dict__)
-    payload = {'orders': [contract.__dict__] }
+    payload = contract.__dict__ 
     print(payload)
     broker.placeOrder(payload)
+
+def testPlaceLmtGtcOrthOrder(conid):
+    broker = Broker()
+    broker.isAuthenticated()
+    broker.setAccountId()
+    contract = BaseContract(conid)
+    lmtOrder = LimitOrder("BUY",limitPrice=18, totalQuantity= 1)
+    lmtOrder.tif = "GTC"
+    lmtOrder.outsideRTH = True 
+    contract.__dict__.update(lmtOrder.__dict__)
+    payload = contract.__dict__
+    print(payload)
+    try:
+        broker.placeOrder(payload)
+    except NotAllowedOutsideRTH:
+        print("this order cannot be placed with outsideRTH=True")
+        response = input('Check contracts trading schedule? yes/no')
+        if response == 'yes':
+            inst = Instrument()
+            inst.conid = conid
+            inst.getContractDetails(contract)
+            # Check if contract is FUT - most futures do not have
+            # an outsideRTH parameter
+            symbol = inst.json['ticker']
+            assetClass = inst.json['secType']
+            exchange = inst.json['exchange']
+            # Parse response pls.
+            inst.getTradingSchedule(symbol=symbol,
+                    assetClass=assetClass, exchange=exchange)
 
 def testOrderPlacementLogic():
     testOrderObject()
@@ -427,6 +461,7 @@ def testWhatIfTimeouts():
     print(f"finished going through {counter} whatif's")
 
 def testHistoricalData():
+    # blah
     period = sys.argv[1]
     barSize = sys.argv[2]
     print(period)
@@ -441,8 +476,13 @@ def testHistoricalData():
         sys.exit()
     
 if __name__ == "__main__":
+    
+#    testPlaceMktOrder(265598)
 
-    testHistoricalData()
+    testPlaceLmtGtcOrthOrder(637533450)
+#    testPlaceMultipleOrders()
+
+#    testHistoricalData()
 #    testWhatIfTimeouts()
 #    with open('sillyTests/sillyStringOfFields.txt', 'r') as inpFile:
 #        fields = inpFile.read()
