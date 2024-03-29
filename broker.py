@@ -175,12 +175,6 @@ class Session():
     def __init__(self):
         self.attempts = 0
 
-    def authenticateUser(self, username, password):
-        return
-
-    def relogin(self, username, password):
-        return
-
     def checkAuthStatus(self):
         if self.attempts != 0:
             print(f"Reauth attempt number: {self.attempts}")
@@ -190,6 +184,7 @@ class Session():
             if response.status_code == 401:
                 raise NotLoggedIn 
             jsonData = json.loads(response.text)
+            print(jsonData)
             self.parseAuthResponse(jsonData)
             print(jsonData)
             return jsonData 
@@ -206,6 +201,7 @@ class Session():
 
         except CompetingSessionException:
             print("Only one session is allowed per username")
+            self.checkAuthStatus()
 
         except Exception as err:
             print(f"Authentication class exception -> ", err)
@@ -213,20 +209,28 @@ class Session():
 
 
     def parseAuthResponse(self, jsonData):
+
+        if jsonData['authenticated'] == False and jsonData['competing'] == False and jsonData['connected'] == True:
+            raise NotAuthenticated
+
         if jsonData['authenticated'] == jsonData['competing'] == jsonData['connected'] == False:
             # this happens if TWS runs in live or paper mode with same credentials
-            raise NotAuthenticated
+            raise CompetingSessionException 
 
         if jsonData['competing'] == True:
             raise CompetingSessionException
+
+        if jsonData['authenticated'] != True and jsonData['connected'] != True:
+            raise NotAuthenticated
 
         else:
             print("Auth response: ", jsonData)
 
     def reauthenticateSession(self):
         print('Trying to reauthenticate the session... ')
-        # Why are we adding /sso/validate ?
-        response = requests.get(endpoints['reauth'], verify=False)
+        # Deprecated, use /ssodh/init to reauthenticate session
+#        response = requests.get(endpoints['reauth'], verify=False)
+        response = requests.get(endpoints['ssodh_init'], verify=False)
         print(response.text)
         self.attempts += 1
         if self.attempts < 5:
@@ -239,6 +243,12 @@ class Session():
 
     def __repr__(self):
         return f'class Authentication'
+
+    def keepAlive(self):
+        endpoint = endpoints['tickle']
+        response = requests.get(endpoint, verify=False)
+        jsonData = json.loads(response.text)
+        return jsonData
 
 
 class Broker(Session):
@@ -259,7 +269,7 @@ class Broker(Session):
 
     def isAuthenticated(self):
         data = self.checkAuthStatus()
-        print("REAUTH: ", data)
+        print("auth check: ", data)
         if data['authenticated'] == True:
             return True
 

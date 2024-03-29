@@ -29,4 +29,6 @@ endpoints = {
         'whatif': base_url + '/iserver/account/ACCID/orders/whatif',
         'history': base_url + '/iserver/marketdata/history',
         'tradingSchedule': base_url + '/trsrv/secdef/schedule',
+        'ssodh_init': base_url + '/iserver/auth/ssodh/init',
+        'tickle': base_url + '/tickle',
         }

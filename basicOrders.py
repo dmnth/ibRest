@@ -49,3 +49,13 @@ class LimitOrder(BaseOrder):
 
     def __repr__(self):
         return  "Limit order"
+
+class FxMktOrder(MktOrder):
+    # needs isCcyConv: True
+    return
+
+
+class FxLimitOrder(MktOrder):
+    # isCcyConv: True and fxQty instead of totalQuantity
+    return
+    return

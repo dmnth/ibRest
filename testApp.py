@@ -2,6 +2,7 @@
 
 import json
 import sys
+import time
 from broker import Broker, ContractDetailsManager
 from orderFactory import Contract, Order
 from basicOrders import MktOrder, LimitOrder
@@ -294,7 +295,7 @@ def testPlaceMktOrder(conid):
     broker = Broker()
     broker.isAuthenticated()
     broker.setAccountId()
-    contract = BaseContract(265598)
+    contract = BaseContract(conid)
     mktOrder = MktOrder("BUY", 1)
     mktOrder.tif = "GTC"
     contract.__dict__.update(mktOrder.__dict__)
@@ -464,27 +465,61 @@ def testHistoricalData():
     # blah
     period = sys.argv[1]
     barSize = sys.argv[2]
+    # Format YYYYMMDD-HH:MM:SS
+    startTime = sys.arv[3]
     print(period)
     broker = Broker()
     broker.isAuthenticated()
     broker.setAccountId()
     try:
         broker.getHistory('272093', exchange= 'NASDAQ', period=period, 
-                bar=barSize, startTime='20220327-09:30:00', outsideRth=False)
+                bar=barSize, startTime=startTime, outsideRth=False)
     except TooManyHistoricalRequests:
         print("Too many historical requests, please wait and try again later")
         sys.exit()
+
+def testSilltStringsOfFields():
+    with open('sillyTests/sillyStringOfFields.txt', 'r') as inpFile:
+        fields = inpFile.read()
+        print(fields)
+    testSnapshotFields(fields)
+
+def testTickleUpdatesSSOExpires():
+    broker = Broker()
+    broker.isAuthenticated()
+    broker.setAccountId()
+    while True:
+        sessionData = broker.keepAlive()
+        print("Session will expire in: ", sessionData["ssoExpires"])
+        time.sleep(60)
+        broker.checkAuthStatus()
+        if sessionData["ssoExpires"] == 0:
+            broker.checkAuthStatus()
+            print("KONIEC")
+            sys.exit()
+#        broker.reauthenticateSession()
+    return
+
+def testCanPlaceForexOrder(forexPair):
+    # fxQty and isCcconv fields are required
+    broker = Broker()
+    broker.isAuthenticated()
+    broker.setAccountId()
+    inst = Instrument(forexPair)
+    inst.getContractsBySymbol()
+    inst.showFoundContracts()
+    inst.assignConid()
+    print(inst.conid)
+    contract = BaseContract(inst.conid)
+    contract.listingExchange = "IDEALPRO"
+    contract.secType = f"{inst.conid}@IDEALPRO"
+    mktOrder = MktOrder("BUY", 1)
+    mktOrder.tif = "GTC"
+    contract.__dict__.update(mktOrder.__dict__)
+    payload = contract.__dict__ 
+    print(payload)
+    broker.placeOrder(payload)
     
 if __name__ == "__main__":
+    testCanPlaceForexOrder("EUR.USD")
     
-#    testPlaceMktOrder(265598)
-
-    testPlaceLmtGtcOrthOrder(637533450)
-#    testPlaceMultipleOrders()
-
-#    testHistoricalData()
-#    testWhatIfTimeouts()
-#    with open('sillyTests/sillyStringOfFields.txt', 'r') as inpFile:
-#        fields = inpFile.read()
-#        print(fields)
-#    testSnapshotFields(fields)
