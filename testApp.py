@@ -339,14 +339,13 @@ def testOrderPlacementLogic():
     testPayload()
     testPlaceOrder()
 
-def testPositionsPerAccount():
+def testPositionsPerAccount(pageid):
     broker = Broker()
     broker.isAuthenticated()
     broker.setAccountId()
     broker.showAccounts()
 #    broker.account.invalidatePositions()
-    broker.showPositions(pageId=1)
-#    broker.showPositions(pageId=0)
+    broker.showPositions(pageId=pageid)
 
 def testCanStoreStkContractsFromCompNamesJSON():
     broker = Broker()
@@ -521,5 +520,9 @@ def testCanPlaceForexOrder(forexPair):
     broker.placeOrder(payload)
     
 if __name__ == "__main__":
-    testCanPlaceForexOrder("EUR.USD")
+#    testPositionsPerAccount(pageid=0)
+    for n in range(0, 5):
+        testPositionsPerAccount(pageid=n)
+        time.sleep(1)
+#    testCanPlaceForexOrder("EUR.USD")
     
