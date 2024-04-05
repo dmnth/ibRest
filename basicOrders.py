@@ -21,34 +21,48 @@ orderString = """
         self.JSON = {}
 """
 
-class BaseOrder:
+# Not all tif values that are supported by TWS API are supported
+# by REST API
+
+class DefaultBaseOrder:
 
     def __init__(self, action, totalQuantity, tif):
 
         self.side = action
         self.quantity = totalQuantity
-        # All orders will have a default time 
-        # in force value of "DAY" because of reasons
         self.tif = tif 
 
-class MktOrder(BaseOrder):
+class CashQtyBaseOrder:
+
+    def __init__(self, action, cashQty, tif):
+        self.side = action
+        self.cashQty = cashQty
+        self.tif = tif
+
+class MktOrder(DefaultBaseOrder):
     
     def __init__(self, action, totalQuantity, tif):
-        BaseOrder.__init__(self, action, totalQuantity, tif)
+        DefaultBaseOrder.__init__(self, action, totalQuantity, tif)
         self.orderType = "MKT"
 
     def __repr__(self):
         return "Market order"
 
-class LimitOrder(BaseOrder):
+class LimitOrder(DefaultBaseOrder):
 
     def __init__(self, action, limitPrice, totalQuantity, tif):
-        BaseOrder.__init__(self, action, totalQuantity, tif)
+        DefaultBaseOrder.__init__(self, action, totalQuantity, tif)
         self.orderType = "LMT"
         self.price = limitPrice
 
     def __repr__(self):
         return  "Limit order"
+
+class CashMktOrder(CashQtyBaseOrder):
+    
+    def __init__(self, action, cashQty, tif):
+        CashQtyBaseOrder.__init__(self, action, cashQty, tif)
+        self.orderType = "MKT"
 
 class GTDLimitOrder(LimitOrder):
     def __init__(self, action, limitPrice, totalQuantity, tif, gdUntl, expTime):

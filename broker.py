@@ -319,6 +319,7 @@ class Broker(Session):
         return orderData 
 
     def placeOrder(self, contractJSON):
+        # Redo the exceptions, remove the duplicates.
         payload = {'orders': [contractJSON]}
         endpoint = endpoints['place_order'].replace('accountId', self.acctId)
         resp = requests.post(endpoint, verify=False, json=payload)
@@ -330,11 +331,6 @@ class Broker(Session):
                     # Parse the error JSON here
                     errorHandler(order)
 
-            except TypeError:
-                error = order[0]
-                print('########################################')
-                print(error)
-                print('for some reason error came in in format of a list')
             except JSONDecodeError:
                 print('Faulty response object that raised JSONDecodeError: ')
                 print(response.text)
@@ -438,6 +434,7 @@ class Broker(Session):
             for el in jsonData:
                 if el['conid'] not in snapshot:
                     snapshot.append(el)
+                    print(el)
                 
 
                         

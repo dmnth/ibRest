@@ -5,7 +5,7 @@ import sys
 import time
 from broker import Broker, ContractDetailsManager
 from orderFactory import Contract, Order
-from basicOrders import MktOrder, LimitOrder
+from basicOrders import MktOrder, LimitOrder, CashMktOrder
 from baseContract import Contract as BaseContract, Instrument
 from exceptions import * 
     
@@ -542,13 +542,22 @@ def testContractJSON(pathToJSON):
     return contracts
 
 def testShortableCheck():
-    testSnapshotFields()
-    
-if __name__ == "__main__":
-#    testPositionsPerAccount(pageid=0)
     contracts = testContractJSON('EU_tickers_500.json')
     conids = ','.join([con['conid'] for con in contracts['stocks']][:20])
     fields = '7636,7644'
     testSnapshotFields(conids, fields)
-#    testCanPlaceForexOrder("EUR.USD")
+
+def testPlaceCashQtyOrders(conid):
+    broker = Broker()
+    broker.isAuthenticated()
+    broker.setAccountId()
+    contract = BaseContract(conid)
+    order = CashMktOrder(action="SELL", cashQty=500, tif="DAY")
+    print(contract.__dict__)
+    print(order.__dict__)
+    contract.__dict__.update(order.__dict__)
+    print(contract.__dict__)
+    broker.placeOrder(contract.__dict__) 
+if __name__ == "__main__":
+    testPlaceCashQtyOrders(265598)
     
