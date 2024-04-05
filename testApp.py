@@ -522,6 +522,20 @@ def testCanPlaceForexOrder(forexPair):
     print(payload)
     broker.placeOrder(payload)
 
+def testGTDlimitOrder():
+    # GTD is not a valid tif value in context of CP API
+    broker = Broker()
+    broker.isAuthenticated()
+    broker.setAccountId()
+    contract = BaseContract(143916318)
+    contract.listingExchange = 'SMART'
+    order = GTDLimitOrder(action='BUY', limitPrice=1.035,
+            totalQuantity=20, tif="GTD", goodTillDate='20240404 16:00:00',
+            expTime='20240404 17:00:00')
+    contract.__dict__.update(order.__dict__)
+    print(contract.__dict__)
+    broker.placeOrder(contract.__dict__)
+
 def testContractJSON(pathToJSON):
     with open(pathToJSON, 'r') as InputFile:
         contracts = json.load(InputFile)
