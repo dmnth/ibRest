@@ -50,14 +50,14 @@ def testBracketOrder():
 
     broker.placeOrder(orderPayload)
 
-def testSnapshotFields(flds: str):
+def testSnapshotFields(conids: int, flds: str):
 
     broker = Broker()
     broker.isAuthenticated()
     broker.setAccountId()
     if broker.isAuthenticated() == True:
         broker.setAccountId()
-        broker.makeMdSnapshot(14094, flds)
+        broker.makeMdSnapshot(conids, flds)
     else:
         print("Not authenticated")
 
@@ -433,6 +433,7 @@ def testCFDfromSymbol():
     else:
         print("no cfd found")
 
+
 def testWhatIfTimeouts():
     broker = Broker()
     broker.isAuthenticated()
@@ -456,8 +457,10 @@ def testWhatIfTimeouts():
                     counter += 1
                 except InternalServerError:
                     print('Internal server error')
+                    continue
                 except TimeoutError:
                     print(f'timed out with {counter} whatifs')
+                    sys.exit()
     print(f"finished going through {counter} whatif's")
 
 def testHistoricalData():
@@ -518,11 +521,20 @@ def testCanPlaceForexOrder(forexPair):
     payload = contract.__dict__ 
     print(payload)
     broker.placeOrder(payload)
+
+def testContractJSON(pathToJSON):
+    with open(pathToJSON, 'r') as InputFile:
+        contracts = json.load(InputFile)
+    return contracts
+
+def testShortableCheck():
+    testSnapshotFields()
     
 if __name__ == "__main__":
 #    testPositionsPerAccount(pageid=0)
-    for n in range(0, 5):
-        testPositionsPerAccount(pageid=n)
-        time.sleep(1)
+    contracts = testContractJSON('EU_tickers_500.json')
+    conids = ','.join([con['conid'] for con in contracts['stocks']][:20])
+    fields = '7636,7644'
+    testSnapshotFields(conids, fields)
 #    testCanPlaceForexOrder("EUR.USD")
     

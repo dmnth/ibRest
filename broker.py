@@ -427,21 +427,20 @@ class Broker(Session):
         params = {
                 "conids": conids,
                 "fields": fields,
-        #        "since": since 
+                "since": since
                 }
-        snapshot = {}
+        snapshot = [] 
         while True:
             time.sleep(1)
             response = requests.get(endpoints['snapshot'], params=params, verify=False)
             jsonData = json.loads(response.text)
             ticks = jsonData[0]
-            try:
-                print(f"LAST: {ticks['31']} - BID: {ticks['84']} - ASK: {ticks['86']}")
-            except KeyError:
-                continue
+            for el in jsonData:
+                if el['conid'] not in snapshot:
+                    snapshot.append(el)
+                
 
-        return
-
+                        
     def unsubscribeMd(self, conid):
         data = { 'conid': conid }
         response = requests.post(endpoints['unsubscribe'], data=data, verify=False)
@@ -486,10 +485,6 @@ class Broker(Session):
             contracts = json.load(InputFile)
 
         self.contracts = contracts 
-
-    def __repr__(self):
-        return 'Main Aplication'
-
 
 if __name__ == "__main__":
     testAlgoOrder()
