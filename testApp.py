@@ -512,13 +512,18 @@ def testCanPlaceForexOrder(forexPair):
     inst.showFoundContracts()
     inst.assignConid()
     print(inst.conid)
-    contract = BaseContract(inst.conid)
+    contract = BaseContract(int(inst.conid))
     contract.listingExchange = "IDEALPRO"
     contract.secType = f"{inst.conid}@IDEALPRO"
-    mktOrder = MktOrder("BUY", 1)
+    mktOrder = LimitOrder(action="BUY", totalQuantity=1, tif="DAY", limitPrice=1.1234)
+    del mktOrder.__dict__['quantity']
     mktOrder.tif = "GTC"
+    mktOrder.fxQty = 25000
+    mktOrder.isCcyConv = True
     contract.__dict__.update(mktOrder.__dict__)
     payload = contract.__dict__ 
+    with open('fxConversionSample.json', 'w') as outFile:
+        json.dump(payload, outFile, indent=4)
     print(payload)
     broker.placeOrder(payload)
 
@@ -553,11 +558,13 @@ def testPlaceCashQtyOrders(conid):
     broker.setAccountId()
     contract = BaseContract(conid)
     order = CashMktOrder(action="SELL", cashQty=500, tif="DAY")
+    order = MktOrder(action="SELL", totalQuantity=1, tif="DAY")
     print(contract.__dict__)
     print(order.__dict__)
     contract.__dict__.update(order.__dict__)
     print(contract.__dict__)
     broker.placeOrder(contract.__dict__) 
+
 if __name__ == "__main__":
-    testPlaceCashQtyOrders(265598)
+    testCanPlaceForexOrder('GBP.USD')
     
