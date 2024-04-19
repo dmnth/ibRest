@@ -58,6 +58,14 @@ class LimitOrder(DefaultBaseOrder):
     def __repr__(self):
         return  "Limit order"
 
+class TrailLimit(LimitOrder):
+    
+    def __init__(self, action, stopPrice, totalQuantity, tif, trailingType, trailingAmount):
+        LimitOrder.__init__(self, action, stopPrice, totalQuantity, tif)
+        self.orderType = "TRAIL"
+        self.trailingType = trailingType
+        self.trailingAmount = trailingAmount
+
 class CashMktOrder(CashQtyBaseOrder):
     
     def __init__(self, action, cashQty, tif):

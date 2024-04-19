@@ -5,7 +5,7 @@ import sys
 import time
 from broker import Broker, ContractDetailsManager
 from orderFactory import Contract, Order
-from basicOrders import MktOrder, LimitOrder, CashMktOrder
+from basicOrders import MktOrder, LimitOrder, CashMktOrder, TrailLimit
 from baseContract import Contract as BaseContract, Instrument
 from exceptions import * 
     
@@ -230,13 +230,13 @@ def placeAlgoOrder():
         outFile.close()
     broker.placeOrder(orderPayload)
 
-def placeSimpleOrder():
+def placeSimpleOrder(conid):
     broker = Broker()
     broker.isAuthenticated()
     broker.setAccountId()
     payload = {
             'acctId': 'U10412366',
-            'conid': 265598,
+            'conid': int(conid),
             'orderType': 'LMT',
             'price': 110,
             'listingExchange': 'SMART',
@@ -246,9 +246,10 @@ def placeSimpleOrder():
             'quantity': 200,
             'outsideRTH': True 
             }
-    
-    orderPayload = {'orders': [payload]}
-    broker.placeOrder(orderPayload)
+    print(payload) 
+    with open('randomConid.json', 'w') as outFile:
+        json.dump(payload, outFile, indent=4)
+    broker.placeOrder(payload)
 
 
 def testWatchlists():
@@ -565,6 +566,20 @@ def testPlaceCashQtyOrders(conid):
     print(contract.__dict__)
     broker.placeOrder(contract.__dict__) 
 
+def testTrailLimitOrder(conid):
+    broker = Broker()
+    broker.isAuthenticated()
+    broker.setAccountId()
+    contract = BaseContract(conid)
+    order = TrailLimit(action="SELL", totalQuantity=1, tif="DAY", 
+            stopPrice='140', trailingType='amt', trailingAmount=1)
+    print(contract.__dict__)
+    print(order.__dict__)
+    contract.__dict__.update(order.__dict__)
+    print(contract.__dict__)
+    broker.placeOrder(contract.__dict__) 
+
 if __name__ == "__main__":
-    testCanPlaceForexOrder('GBP.USD')
+    testTrailLimitOrder(265598)
+
     
