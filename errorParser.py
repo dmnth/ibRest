@@ -21,6 +21,9 @@ def errorHandler(responseJSON):
     if responseJSON['error'] == "invalid order attribute : Outside Regular Trading Hours": 
         raise NotAllowedOutsideRTH
 
+    if responseJSON['error'] == 'invalid order price fields':
+        raise InvalidAttributeSyntax
+
     try:
 
         rsn = responseJSON['cqe']['post_payload']['rejections']

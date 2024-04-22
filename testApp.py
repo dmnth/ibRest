@@ -567,12 +567,17 @@ def testPlaceCashQtyOrders(conid):
     broker.placeOrder(contract.__dict__) 
 
 def testTrailLimitOrder(conid):
+    # Check if the fields syntax is correct "Invalid order price fields"
     broker = Broker()
     broker.isAuthenticated()
     broker.setAccountId()
-    contract = BaseContract(conid)
+    inst = Instrument('EUR.USD')
+    inst.getContractsBySymbol()
+    inst.showFoundContracts()
+    inst.assignConid()
+    contract = BaseContract(int(inst.conid))
     order = TrailLimit(action="SELL", totalQuantity=1, tif="DAY", 
-            stopPrice='140', trailingType='amt', trailingAmount=1)
+            stopPrice=1.0662, trailingType='amt', trailingAmount=0.002)
     print(contract.__dict__)
     print(order.__dict__)
     contract.__dict__.update(order.__dict__)

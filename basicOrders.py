@@ -64,7 +64,7 @@ class TrailLimit(LimitOrder):
         LimitOrder.__init__(self, action, stopPrice, totalQuantity, tif)
         self.orderType = "TRAIL"
         self.trailingType = trailingType
-        self.trailingAmount = trailingAmount
+        self.trailingAmt = trailingAmount
 
 class CashMktOrder(CashQtyBaseOrder):
     

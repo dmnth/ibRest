@@ -183,7 +183,9 @@ async def sendMessages(msgList):
                     print("market depth --> ", jsonData['topic'])
 
                 if jsonData['topic'] == 'sor':
-                    print(jsonData['topic'])
+                    response = f"{jsonData['topic']} -->{jsonData}" 
+                    print(response)
+                    
 
                 if jsonData['topic'] == "sbd" and mktDepthUnsubscribed == False:
                     print(jsonData)
@@ -240,8 +242,14 @@ def liveMarketData():
     messages = [msg]
     asyncio.get_event_loop().run_until_complete(sendMessages(messages))
 
+def tesLiveOrderUpdates():
+    msg = create_SOR_req()
+    print(type(msg))
+    messages = [msg]
+    asyncio.get_event_loop().run_until_complete(sendMessages(messages))
+
 def main():
-    liveMarketData()
+    tesLiveOrderUpdates()
 
 if __name__ == "__main__":
     urllib3.disable_warnings()

@@ -64,3 +64,8 @@ class TooManyHistoricalRequests(Exception):
 class NotAllowedOutsideRTH(Exception):
     # Not all orders can be placed outside regular trading hours
     pass
+
+class InvalidAttributeSyntax(Exception):
+    # Raised if one of the JSON fields has invalid formatting
+    # For example: Price instead of price or trailingAmount instead ot trailingAmt
+    pass
