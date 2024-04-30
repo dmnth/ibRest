@@ -279,6 +279,19 @@ class Broker(Session):
         with open('liveOrders.json', 'w') as outFile:
             outFile.write(jsonRepr)
 
+    def suppressPrecautions(self, ids: list):
+        print("SUPPRESS")
+        jsonData = {"messageIds": ids}
+        respose = requests.post(endpoints['suppress'], verify=False,
+                json=jsonData)
+        try:
+            jsonResp = json.loads(respose.text)
+            print(jsonResp)
+            return jsonResp
+        except Exception as e:
+            print(e)
+                
+
     def secDefParams(self, symbol, secType):
         inst = Instrument(symbol)
         inst.getContractsBySymbol(symbol)

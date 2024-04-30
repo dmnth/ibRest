@@ -584,7 +584,13 @@ def testTrailLimitOrder(conid):
     print(contract.__dict__)
     broker.placeOrder(contract.__dict__) 
 
+def testMessageSuppressByID(mid):
+    broker = Broker()
+    broker.isAuthenticated()
+    broker.setAccountId()
+    broker.suppressPrecautions(mid)
+
 if __name__ == "__main__":
-    testTrailLimitOrder(265598)
+    testMessageSuppressByID(mid=['o102'])
 
     

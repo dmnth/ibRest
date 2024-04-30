@@ -31,4 +31,5 @@ endpoints = {
         'tradingSchedule': base_url + '/trsrv/secdef/schedule',
         'ssodh_init': base_url + '/iserver/auth/ssodh/init',
         'tickle': base_url + '/tickle',
+        'suppress': base_url +'/iserver/questions/suppress'
         }
