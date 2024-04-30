@@ -16,6 +16,8 @@ ssl_context = ssl._create_unverified_context()
 local_ip = "127.0.0.1:5000"
 base_url = f"https://{local_ip}/v1/api"
 
+
+
 #Historical data payload:
 def create_SMH_req(conID, period, barSize, dataType, dateFormat):
     msg = f"smh+{conID}+" + json.dumps({
