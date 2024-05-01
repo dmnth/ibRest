@@ -3,9 +3,10 @@
 import json
 import sys
 import time
+import random
 from broker import Broker, ContractDetailsManager
 from orderFactory import Contract, Order
-from basicOrders import MktOrder, LimitOrder, CashMktOrder, TrailLimit
+from basicOrders import MktOrder, LimitOrder, CashMktOrder, TrailLimit, TrailStop
 from baseContract import Contract as BaseContract, Instrument
 from exceptions import * 
     
@@ -33,22 +34,6 @@ def testOrderOperations():
     broker.modifySingleOrder(oid, orderPayload, price=0.845, size=2) 
 
     broker.showLiveOrders('')
-
-def testBracketOrder():
-    broker = Broker()
-    broker.isAuthenticated()
-    broker.setAccountId()
-    contract = createSampleContract()
-    bracketOrder = createBracketOrder() 
-    orderPayload = {'orders': [] }
-    for el in bracketOrder:
-        el.updateAccountId(broker.acctId)
-        el._toJSON()
-        el.JSON.update(contract.JSON)
-        orderPayload['orders'].append(el.JSON)
-        print(orderPayload)
-
-    broker.placeOrder(orderPayload)
 
 def testSnapshotFields(conids: int, flds: str):
 
@@ -576,7 +561,7 @@ def testTrailLimitOrder(conid):
     inst.showFoundContracts()
     inst.assignConid()
     contract = BaseContract(int(inst.conid))
-    order = TrailLimit(action="SELL", totalQuantity=1, tif="DAY", 
+    order = TrailStop(action="SELL", totalQuantity=1, tif="DAY", 
             stopPrice=1.0662, trailingType='amt', trailingAmount=0.002)
     print(contract.__dict__)
     print(order.__dict__)
@@ -590,7 +575,66 @@ def testMessageSuppressByID(mid):
     broker.setAccountId()
     broker.suppressPrecautions(mid)
 
+def testBracketOrder():
+    broker = Broker()
+    broker.isAuthenticated()
+    broker.setAccountId()
+    instrument = Instrument('AAPL')
+    instrument.getContractsBySymbol()
+    instrument.assignConid()
+    contract = BaseContract(int(instrument.conid))
+    print(contract.__dict__)
+    randomid = random.randint(1, 999)
+    parentOrder = MktOrder('BUY', 1, 'DAY')
+    parentOrder.outsideRth = 1
+    parentOrder.__dict__.update(contract.__dict__)
+    coidString = f'My_very_unique_bracket_order_{randomid}'
+    parentOrder.cOID = coidString
+    print("Parent order: ", parentOrder.__dict__)
+    childOrder1 = TrailLimit('SELL', 170.33, 170, 1, 'GTC', '%', 10) 
+    childOrder1.parentId = coidString 
+    childOrder1.outsideRth = 1
+    childOrder1.__dict__.update(contract.__dict__)
+    print("Child order uno: ", childOrder1.__dict__)
+    orderLst = [parentOrder.__dict__, childOrder1.__dict__]
+    payload = {'orders': orderLst}
+    broker.placeOrder(payload)
+    return
+
+def testBracketOrder():
+    # Need to track confimation messages in order not to
+    # confirm same one on occasion when multiple orders
+    # of the same type are being placed simultaneously
+    # in context of one session.
+    broker = Broker()
+    broker.isAuthenticated()
+    broker.setAccountId()
+    instrument = Instrument('AAPL')
+    instrument.getContractsBySymbol()
+    instrument.assignConid()
+    contract = BaseContract(int(instrument.conid))
+    print(contract.__dict__)
+    randomid = random.randint(1, 999)
+    parentOrder = LimitOrder('BUY', 170.33, 1, 'DAY')
+    parentOrder.outsideRth = 1
+    parentOrder.__dict__.update(contract.__dict__)
+    coidString = f'My_very_unique_bracket_order_{randomid}'
+    parentOrder.cOID = coidString
+    print("Parent order: ", parentOrder.__dict__)
+    childOrder1 = TrailLimit('SELL', 170.33, 170, 1, 'GTC', '%', 10) 
+    childOrder1.parentId = coidString 
+    childOrder1.outsideRth = 1
+    childOrder1.__dict__.update(contract.__dict__)
+    print("Child order uno: ", childOrder1.__dict__)
+    childOrder2 = TrailStop('BUY', 170.33, 1, 'GTC', '%', 10)
+    childOrder2.parentId = coidString
+    childOrder2.outsideRth = 1
+    childOrder2.__dict__.update(contract.__dict__)
+    orderLst = [parentOrder.__dict__, childOrder1.__dict__, childOrder2.__dict__]
+    payload = {'orders': orderLst}
+    broker.placeOrder(payload)
+    return
 if __name__ == "__main__":
-    testMessageSuppressByID(mid=['o102'])
+    testBracketOrder()
 
     

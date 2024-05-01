@@ -31,6 +31,7 @@ class DefaultBaseOrder:
         self.side = action
         self.quantity = totalQuantity
         self.tif = tif 
+        self.cOID = ''
 
 class CashQtyBaseOrder:
 
@@ -58,13 +59,25 @@ class LimitOrder(DefaultBaseOrder):
     def __repr__(self):
         return  "Limit order"
 
-class TrailLimit(LimitOrder):
+#class Trail():
+    #TODO
+
+class TrailStop(LimitOrder):
     
     def __init__(self, action, stopPrice, totalQuantity, tif, trailingType, trailingAmount):
         LimitOrder.__init__(self, action, stopPrice, totalQuantity, tif)
         self.orderType = "TRAIL"
         self.trailingType = trailingType
         self.trailingAmt = trailingAmount
+
+class TrailLimit(LimitOrder):
+    
+    def __init__(self, action, price, auxPrice, totalQuantity, tif, trailingType, trailingAmount):
+        LimitOrder.__init__(self, action, price, totalQuantity, tif)
+        self.orderType = "TRAILLMT"
+        self.trailingType = trailingType
+        self.trailingAmt = trailingAmount
+        self.auxPrice = auxPrice
 
 class CashMktOrder(CashQtyBaseOrder):
     
@@ -77,7 +90,6 @@ class GTDLimitOrder(LimitOrder):
         LimitOrder.__init__(self, action, limitPrice, totalQuantity, tif)
         self.goodTillDate = gdUntl 
         self.expireTime = expireTime 
-
 
 class FxMktOrder(MktOrder):
     # needs isCcyConv: True

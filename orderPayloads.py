@@ -1,59 +1,54 @@
 #! /usr/bin/env python3
 
-class Samples():
+def samplePayloadUno(acctId):
 
-    def __init__(self):
-        self.property = None
+    payload = {
+            "acctId": acctId,
+            "conid": 477963416,
+            "orderType": "TRAIL",
+            "listingExchange": "SEHK",
+            "side": "SELL",
+            "price": 110.3,
+            "trailingAmt": 0.5,
+            "trailingType": "%",
+            "ticker": "9626",
+            "tif": "DAY",
+            "quantity": 200,
+            "outsideRTH": True 
+            }
 
-    def samplePayloadUno(acctId):
+    return payload
 
-        payload = {
-                "acctId": acctId,
-                "conid": 477963416,
-                "orderType": "TRAIL",
-                "listingExchange": "SEHK",
-                "side": "SELL",
-                "price": 110.3,
-                "trailingAmt": 0.5,
-                "trailingType": "%",
-                "ticker": "9626",
-                "tif": "DAY",
-                "quantity": 200,
-                "outsideRTH": True 
-                }
+def mktOrderPayload(acctId):
 
-        return payload
+    payload = {
+            "acctId": acctId,
+            "conid": 477963416,
+            "orderType": "MKT",
+            "listingExchange": "SMART",
+            "side": "BUY",
+            "ticker": "9626",
+            "tif": "GTC",
+            "quantity": 200,
+            "outsideRTH": True 
+            }
 
-    def mktOrderPayload(acctId):
+    return payload
 
-        payload = {
-                "acctId": acctId,
-                "conid": 477963416,
-                "orderType": "MKT",
-                "listingExchange": "SMART",
-                "side": "BUY",
-                "ticker": "9626",
-                "tif": "GTC",
-                "quantity": 200,
-                "outsideRTH": True 
-                }
+def applMktOrder(acctId):
 
-        return payload
+    payload = {
+            "acctId": acctId,
+            "conid": 265598,
+            "orderType": "LMT",
+            "price": 110,
+            "listingExchange": "SMART",
+            "side": "BUY",
+            "ticker": "AAPL",
+            "tif": "GTC",
+            "quantity": 200,
+            "outsideRTH": True 
+            }
 
-    def applMktOrder(acctId):
-
-        payload = {
-                "acctId": acctId,
-                "conid": 265598,
-                "orderType": "LMT",
-                "price": 110,
-                "listingExchange": "SMART",
-                "side": "BUY",
-                "ticker": "AAPL",
-                "tif": "GTC",
-                "quantity": 200,
-                "outsideRTH": True 
-                }
-
-        return payload
+    return payload
 

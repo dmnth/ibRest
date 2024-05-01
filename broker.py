@@ -259,6 +259,7 @@ class Broker(Session):
         Account.__init__(self)
         self.account = Account()
         self.monitor = OrderMonitor()
+        self.replies = []
         self.acctId = '' 
         self.contracts = {}
         self.orderQeue = []
@@ -331,9 +332,9 @@ class Broker(Session):
 
         return orderData 
 
-    def placeOrder(self, contractJSON):
+    def placeOrder(self, payload):
         # Redo the exceptions, remove the duplicates.
-        payload = {'orders': [contractJSON]}
+#        payload = {'orders': [contractJSON]}
         endpoint = endpoints['place_order'].replace('accountId', self.acctId)
         resp = requests.post(endpoint, verify=False, json=payload)
         print("Place order response: ", resp.text, resp.status_code)
@@ -362,31 +363,32 @@ class Broker(Session):
             raise IntenalServerError
 
         if resp.status_code == 405:
-            print("405 in a workflow. Who you gonna call?")
+            print("405 -  Who you gonna call?")
             time.sleep(5)
             print('/iserver/auth/status')
 
     def confirmOrder(self, replyId):
-        endpoint = endpoints['reply'].replace('replyId', replyId)
-        data = {'confirmed': True}
-        message = {}
-        while 'order_id' not in message.keys():
-            print("Incoming: ", message)
-            response = requests.post(endpoint, verify=False, json=data)
-            try:
-                jsonData = json.loads(response.text)
-                print("Outcoming: ", jsonData)
-                if jsonData['error']:
-                    # Parse the error JSON here
-                    errorHandler(jsonData)
-            except TypeError:
-                message = jsonData[0]
-            except json.decoder.JSONDecodeError:
-                print('Faulty response object that raised JSONDecodeError: ')
-                print(response.text)
-                sys.exit
-    
-        return message
+        if replyId not in self.replies:
+            endpoint = endpoints['reply'].replace('replyId', replyId)
+            data = {'confirmed': True}
+            message = {}
+            while 'order_id' not in message.keys():
+                print("Incoming: ", message)
+                response = requests.post(endpoint, verify=False, json=data)
+                try:
+                    jsonData = json.loads(response.text)
+                    print("Outcoming: ", jsonData)
+                    if jsonData['error']:
+                        # Parse the error JSON here
+                        errorHandler(jsonData)
+                except TypeError:
+                    message = jsonData[0]
+                except json.decoder.JSONDecodeError:
+                    print('Faulty response object that raised JSONDecodeError: ')
+                    print(response.text)
+                    sys.exit
+        
+            return message
 
     def modifySingleOrder(self, orderId, orderPayload, price, size):
         print(orderPayload)
