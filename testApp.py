@@ -451,15 +451,17 @@ def testWhatIfTimeouts():
 
 def testHistoricalData():
     # blah
-    period = sys.argv[1]
-    barSize = sys.argv[2]
+    conid = sys.argv[1]
+    period = sys.argv[2]
+    barSize = sys.argv[3]
     # Format YYYYMMDD-HH:MM:SS
-    startTime = sys.arv[3]
+    startTime = sys.argv[4]
     print(period)
     broker = Broker()
     broker.isAuthenticated()
     broker.setAccountId()
     try:
+        # Check if JSON has not retured an error
         broker.getHistory('272093', exchange= 'NASDAQ', period=period, 
                 bar=barSize, startTime=startTime, outsideRth=False)
     except TooManyHistoricalRequests:
@@ -635,6 +637,6 @@ def testBracketOrder():
     broker.placeOrder(payload)
     return
 if __name__ == "__main__":
-    testBracketOrder()
+    testHistoricalData()
 
     
