@@ -9,6 +9,9 @@ rejectionReasons = open('errors/rejectionReasons.txt', 'r').read().split('\n')
 
 def errorHandler(responseJSON):
 
+    if responseJSON['error'].startswith("reply id not found"):
+        raise ReplyIdNotFound
+
     if responseJSON['error'] == 'No trading permissions.':
         raise NoTradingPermissionError
 

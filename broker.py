@@ -368,27 +368,32 @@ class Broker(Session):
             print('/iserver/auth/status')
 
     def confirmOrder(self, replyId):
-        if replyId not in self.replies:
-            endpoint = endpoints['reply'].replace('replyId', replyId)
-            data = {'confirmed': True}
-            message = {}
-            while 'order_id' not in message.keys():
-                print("Incoming: ", message)
-                response = requests.post(endpoint, verify=False, json=data)
-                try:
-                    jsonData = json.loads(response.text)
-                    print("Outcoming: ", jsonData)
-                    if jsonData['error']:
-                        # Parse the error JSON here
-                        errorHandler(jsonData)
-                except TypeError:
-                    message = jsonData[0]
-                except json.decoder.JSONDecodeError:
-                    print('Faulty response object that raised JSONDecodeError: ')
-                    print(response.text)
-                    sys.exit
-        
-            return message
+        data = {'confirmed': True}
+        message = {}
+        print("REPLY ID: ", replyId)
+        endpoint = endpoints['reply'].replace('replyId', replyId)
+        while 'order_id' not in message.keys():
+            print("Incoming: ", message)
+            response = requests.post(endpoint, verify=False, json=data)
+            try:
+                jsonData = json.loads(response.text)
+                print("Outcoming reply endpoint response: ", jsonData)
+                if type(jsonData) == list and 'id' in jsonData[0].keys():
+                    print("Multiple orders payload requires confiramtions")
+                    rid = jsonData[0]['id']
+                    endpoint = endpoint.replace(replyId, rid)
+                if jsonData['error']:
+                    # Parse the error JSON here
+                    errorHandler(jsonData)
+
+            except TypeError:
+                message = jsonData[0]
+            except json.decoder.JSONDecodeError:
+                print('Faulty response object that raised JSONDecodeError: ')
+                print(response.text)
+                sys.exit
+    
+        return message
 
     def modifySingleOrder(self, orderId, orderPayload, price, size):
         print(orderPayload)

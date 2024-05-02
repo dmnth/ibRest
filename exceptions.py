@@ -69,3 +69,7 @@ class InvalidAttributeSyntax(Exception):
     # Raised if one of the JSON fields has invalid formatting
     # For example: Price instead of price or trailingAmount instead ot trailingAmt
     pass
+
+class ReplyIdNotFound(Exception):
+    # Raised if order reply failed to find reply id
+    pass

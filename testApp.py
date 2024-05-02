@@ -637,6 +637,6 @@ def testBracketOrder():
     broker.placeOrder(payload)
     return
 if __name__ == "__main__":
-    testHistoricalData()
+    testBracketOrder()
 
     
