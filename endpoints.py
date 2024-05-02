@@ -28,6 +28,7 @@ endpoints = {
         'inv_positions': base_url + '/portfolio/ACCID/positions/invalidate',
         'whatif': base_url + '/iserver/account/ACCID/orders/whatif',
         'history': base_url + '/iserver/marketdata/history',
+        'historybeta': base_url + '/hmds/history',
         'tradingSchedule': base_url + '/trsrv/secdef/schedule',
         'ssodh_init': base_url + '/iserver/auth/ssodh/init',
         'tickle': base_url + '/tickle',

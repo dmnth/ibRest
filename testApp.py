@@ -571,12 +571,6 @@ def testTrailLimitOrder(conid):
     print(contract.__dict__)
     broker.placeOrder(contract.__dict__) 
 
-def testMessageSuppressByID(mid):
-    broker = Broker()
-    broker.isAuthenticated()
-    broker.setAccountId()
-    broker.suppressPrecautions(mid)
-
 def testBracketOrder():
     broker = Broker()
     broker.isAuthenticated()
@@ -636,7 +630,30 @@ def testBracketOrder():
     payload = {'orders': orderLst}
     broker.placeOrder(payload)
     return
-if __name__ == "__main__":
+
+def supressMessage(mid):
+    broker = Broker()
+    broker.isAuthenticated()
+    broker.setAccountId()
+    broker.suppressPrecautions(mid)
+    return
+    
+
+def testSupressMessage(mid: list):
+    # "You are about to submit a stop order ..."
+    # is suppressed o10331
     testBracketOrder()
+    supressMessage('o103,o104,o10331')
+    testBracketOrder()
+
+def testHistoryBeta():
+    broker = Broker()
+    broker.isAuthenticated()
+    broker.setAccountId()
+    broker.getHistoryBeta(conid='265598', period='1d', bar='1hrs',
+            outsideRth='true', barType='Last')
+
+if __name__ == "__main__":
+    testHistoryBeta()
 
     

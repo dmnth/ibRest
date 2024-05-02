@@ -241,6 +241,7 @@ class Session():
             # Here should be a relogin call
             sys.exit()
 
+
     def __repr__(self):
         return f'class Authentication'
 
@@ -251,7 +252,7 @@ class Session():
         return jsonData
 
 
-class Broker(Session):
+class Broker(Session, Account, OrderMonitor):
 
     def __init__(self):
         OrderMonitor.__init__(self)
@@ -280,17 +281,6 @@ class Broker(Session):
         with open('liveOrders.json', 'w') as outFile:
             outFile.write(jsonRepr)
 
-    def suppressPrecautions(self, ids: list):
-        print("SUPPRESS")
-        jsonData = {"messageIds": ids}
-        respose = requests.post(endpoints['suppress'], verify=False,
-                json=jsonData)
-        try:
-            jsonResp = json.loads(respose.text)
-            print(jsonResp)
-            return jsonResp
-        except Exception as e:
-            print(e)
                 
 
     def secDefParams(self, symbol, secType):
@@ -300,7 +290,21 @@ class Broker(Session):
         inst.setChainsJSON(secType)
         inst.futSecDefInfo()
         sys.exit()
-
+        
+    #accept comma-delimeted string of id's
+    #Messages are supressed during active session
+    def suppressPrecautions(self, ids: str):
+        print("SUPPRESS")
+        jsonData = {"messageIds": ids.split(',')}
+        print(jsonData)
+        respose = requests.post(endpoints['suppress'], verify=False,
+                json=jsonData)
+        try:
+            jsonResp = json.loads(respose.text)
+            print(jsonResp)
+            return jsonResp
+        except Exception as e:
+            print(e)
 
     def showTrades(self, days=''):
         self.monitor.retrieveTradesHistory(days)
@@ -486,6 +490,28 @@ class Broker(Session):
         except JSONDecodeError:
             print('---> Empty response')
             print(f'---> Response length: {len(response.text)}')
+
+    def getHistoryBeta(self, conid, period, bar, outsideRth, barType):
+        endpoint = endpoints['historybeta']
+        print(endpoint)
+        params = {
+                'conid': conid,
+                'period': period,
+                'bar': bar,
+                'outsideRth': outsideRth,
+                'barType': barType
+                }
+        print(params)
+#        params_url = "https://localhost:5000/v1/api/hmds/history?conid=265598&period=1d&bar=1hour&outsideRth=false&barType=last"
+        response = requests.get(endpoint, params=params, verify=False)
+        print(response.text)
+        print(response.status_code)
+        try:
+            jsonData = json.loads(response.text)
+            print(jsonData)
+        except Exception as e:
+            print(e)
+            sys.exit()
 
     def showWatchlists(self):
         self.account.getWatchlistis()
