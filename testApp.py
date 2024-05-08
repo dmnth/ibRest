@@ -40,6 +40,7 @@ def testSnapshotFields(conids: int, flds: str):
     broker = Broker()
     broker.isAuthenticated()
     broker.setAccountId()
+    broker.unsubscribeAll()
     if broker.isAuthenticated() == True:
         broker.setAccountId()
         broker.makeMdSnapshot(conids, flds)
@@ -452,18 +453,19 @@ def testWhatIfTimeouts():
 def testHistoricalData():
     # blah
     conid = sys.argv[1]
-    period = sys.argv[2]
-    barSize = sys.argv[3]
+    exchange = sys.argv[2]
+    period = sys.argv[3]
+    barSize = sys.argv[4]
     # Format YYYYMMDD-HH:MM:SS
-    startTime = sys.argv[4]
+    startTime = sys.argv[5]
     print(period)
     broker = Broker()
     broker.isAuthenticated()
     broker.setAccountId()
     try:
         # Check if JSON has not retured an error
-        broker.getHistory('272093', exchange= 'NASDAQ', period=period, 
-                bar=barSize, startTime=startTime, outsideRth=False)
+        broker.getHistory(conid, exchange=exchange, period=period, 
+                bar=barSize, startTime=startTime, outsideRth=True)
     except TooManyHistoricalRequests:
         print("Too many historical requests, please wait and try again later")
         sys.exit()
@@ -650,10 +652,22 @@ def testHistoryBeta():
     broker = Broker()
     broker.isAuthenticated()
     broker.setAccountId()
-    broker.getHistoryBeta(conid='265598', period='1d', bar='1hrs',
-            outsideRth='true', barType='Last')
+    # This is the only query that works atm
+    broker.getHistoryBeta(conid=265598, period='3w', bar='1d',
+            outsideRth=True, barType='inventory')
+
+def testMarketDataStuff():
+    optid = '699241007'
+    conid = '265598'
+    eurUSD = '12087792'
+    bmw = '140997'
+    conid = '756733'
+    # 698514091
+    testSnapshotFields(conids=conid, flds='85,7694,7700')
+#    testHistoricalData()
+#    testHistoryBeta()
 
 if __name__ == "__main__":
-    testHistoryBeta()
+    testMarketDataStuff()
 
     

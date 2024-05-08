@@ -446,7 +446,7 @@ class Broker(Session, Account, OrderMonitor):
     def makeMdSnapshot(self, conids, fields, since=""):
         params = {
                 "conids": conids,
-                "fields": fields,
+                "fields": fields.split(','),
                 "since": since
                 }
         snapshot = [] 
@@ -460,13 +460,14 @@ class Broker(Session, Account, OrderMonitor):
                     snapshot.append(el)
                     print(el)
                 
-
+    def unsubscribeAll(self):
+        response = requests.get(endpoints['unsubAll'], verify=False)
+        print(response.text)
                         
     def unsubscribeMd(self, conid):
         data = { 'conid': conid }
         response = requests.post(endpoints['unsubscribe'], data=data, verify=False)
         print("Unsubscribed: ", response.text)
-        return
 
     def getHistory(self, conid, exchange, period, bar, startTime, outsideRth):
         endpoint = endpoints['history']
