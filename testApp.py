@@ -6,7 +6,7 @@ import time
 import random
 from broker import Broker, ContractDetailsManager
 from orderFactory import Contract, Order
-from basicOrders import MktOrder, LimitOrder, CashMktOrder, TrailLimit, TrailStop
+from basicOrders import MktOrder, LimitOrder, CashMktOrder, TrailLimit, TrailStop, PegToMid
 from baseContract import Contract as BaseContract, Instrument
 from exceptions import * 
     
@@ -283,12 +283,11 @@ def testPlaceMktOrder(conid):
     broker.isAuthenticated()
     broker.setAccountId()
     contract = BaseContract(conid)
-    mktOrder = MktOrder("BUY", 1)
-    mktOrder.tif = "GTC"
+    mktOrder = MktOrder("BUY", 1, tif='DAY')
     contract.__dict__.update(mktOrder.__dict__)
     payload = contract.__dict__ 
     print(payload)
-    broker.placeOrder(payload)
+    broker.placeOrder({'orders': [payload]})
 
 def testPlaceLmtGtcOrthOrder(conid):
     broker = Broker()
@@ -548,12 +547,12 @@ def testPlaceCashQtyOrders(conid):
     broker.setAccountId()
     contract = BaseContract(conid)
     order = CashMktOrder(action="SELL", cashQty=500, tif="DAY")
-    order = MktOrder(action="SELL", totalQuantity=1, tif="DAY")
+#    order = MktOrder(action="SELL", totalQuantity=1, tif="DAY")
     print(contract.__dict__)
     print(order.__dict__)
     contract.__dict__.update(order.__dict__)
     print(contract.__dict__)
-    broker.placeOrder(contract.__dict__) 
+    broker.placeOrder({'orders': [contract.__dict__]}) 
 
 def testTrailLimitOrder(conid):
     # Check if the fields syntax is correct "Invalid order price fields"
@@ -637,15 +636,15 @@ def supressMessage(mid):
     broker = Broker()
     broker.isAuthenticated()
     broker.setAccountId()
+#    broker.resetAllSuppressed()
     broker.suppressPrecautions(mid)
     return
     
 
-def testSupressMessage(mid: list):
+def testSupressMessage():
     # "You are about to submit a stop order ..."
     # is suppressed o10331
-    testBracketOrder()
-    supressMessage('o103,o104,o10331')
+    supressMessage('o10331')
     testBracketOrder()
 
 def testHistoryBeta():
@@ -658,16 +657,39 @@ def testHistoryBeta():
 
 def testMarketDataStuff():
     optid = '699241007'
-    conid = '265598'
-    eurUSD = '12087792'
+    aapl = '265598'
+    eurUSD = ' 12087792'
     bmw = '140997'
     conid = '756733'
+    bmwOpt = '697011911'
+    conidex = '54740723@OTCLNKECN'
     # 698514091
-    testSnapshotFields(conids=conid, flds='85,7694,7700')
+    testSnapshotFields(conids=f"{conidex}", flds='86,87,85,7310,7311,7308,7309')
 #    testHistoricalData()
 #    testHistoryBeta()
 
-if __name__ == "__main__":
-    testMarketDataStuff()
+def testPegToMidOrder(conid):
+    broker = Broker()
+    broker.isAuthenticated()
+    broker.setAccountId()
+    contract = BaseContract(conid)
+    mktOrder = PegToMid(
+            action="BUY",
+            limitPrice=1,
+            totalQuantity=1,
+            tif='DAY',
+            auxPrice=1
+            )
+    mktOrder.conidex = "265598@IBKRATS"
+    contract.__dict__.update(mktOrder.__dict__)
+    del contract.__dict__['conid']
+    payload = {'orders': [contract.__dict__]} 
+    print(payload)
+    broker.placeOrder(payload)
 
+if __name__ == "__main__":
+    # brokers.isAuthenticated check and broker.setAccountId should
+    # be a part of broker.run() call
+
+    testPegToMidOrder(265598)
     

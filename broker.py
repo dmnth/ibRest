@@ -306,6 +306,11 @@ class Broker(Session, Account, OrderMonitor):
         except Exception as e:
             print(e)
 
+    def resetAllSuppressed(self):
+        print("Resetting suppressed")
+        response = requests.post(endpoints['resetSuppress'], verify=False)
+        print(response.text)
+
     def showTrades(self, days=''):
         self.monitor.retrieveTradesHistory(days)
 
@@ -354,9 +359,10 @@ class Broker(Session, Account, OrderMonitor):
                 print(response.text)
                 sys.exit
             except TypeError:
-                # Process response if no error in payload keys
-                orderData = self.processOrderResponse(order)
-                return orderData
+               # Process response if no error in payload keys
+               print("order is OKAY")
+               orderData = self.processOrderResponse(order)
+               return orderData
         if resp.status_code == 500:
             print("Writing faulty JSON that triggered 500")
             print("Please spend time realising what has gone wrong")

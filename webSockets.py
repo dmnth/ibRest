@@ -166,7 +166,6 @@ async def sendMessages(msgList):
             rst = await websocket.recv()
             jsonData = json.loads(rst.decode())
 
-
             if 'topic' in jsonData.keys():
 
                 if jsonData['topic'] == 'str':
@@ -204,6 +203,7 @@ async def sendMessages(msgList):
                     print("INCOMING")
                     print(f'Updated at: {updateTime}')
                     print(f'Received at: {timeNow}')
+                    print(f'tick: {jsonData}')
                     print("END")
 
 
@@ -239,7 +239,7 @@ def liveOrderUpdates():
     asyncio.get_event_loop().run_until_complete(sendMessages(messages))
 
 def liveMarketData():
-    msg = create_SMD_req('320227571', '31,38')
+    msg = create_SMD_req('54740723@OTCLNKECN', '6509,7308,7309,7310,7311')
     print(type(msg))
     messages = [msg]
     asyncio.get_event_loop().run_until_complete(sendMessages(messages))
@@ -251,7 +251,7 @@ def tesLiveOrderUpdates():
     asyncio.get_event_loop().run_until_complete(sendMessages(messages))
 
 def main():
-    tesLiveOrderUpdates()
+    liveMarketData()
 
 if __name__ == "__main__":
     urllib3.disable_warnings()

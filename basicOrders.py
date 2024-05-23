@@ -100,3 +100,46 @@ class FxLimitOrder(MktOrder):
     # isCcyConv: True and fxQty instead of totalQuantity
     def __init__(self):
         return
+
+
+# IBKRATS orders, only for US stocks trading above 1$ and
+# only non-marketable orders
+# Order type Pegged to Mid is not supported 
+
+class PegToMid(LimitOrder):
+
+    def __init__(self, action, limitPrice, auxPrice, totalQuantity, tif):
+        LimitOrder.__init__(self, action, limitPrice, totalQuantity, tif)
+        self.orderType = 'PEG MID'
+        self.auxPrice = auxPrice
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
