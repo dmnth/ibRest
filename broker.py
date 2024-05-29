@@ -406,21 +406,23 @@ class Broker(Session, Account, OrderMonitor):
         return message
 
     def modifySingleOrder(self, orderId, orderPayload, price, size):
-        print(orderPayload)
 
-        if len(orderPayload['orders']) > 1:
-            print("Cant handle multiple orders at once")
-            sys.exit()
-
-        orderPayload['orders'][0]['price'] = price 
-        orderPayload['orders'][0]['size'] = size
-        del orderPayload['orders'][0]['acctId']
-        modPayload = orderPayload['orders'][0]
+#        if len(orderPayload['orders']) > 1:
+#            print("Cant handle multiple orders at once")
+#            sys.exit()
+        
+#        orderPayload['orders'][0]['price'] = price 
+#        orderPayload['orders'][0]['size'] = size
+#        del orderPayload['orders'][0]['acctId']
+#        modPayload = orderPayload['orders'][0]
         endpoint = endpoints['modify'].replace('oid', orderId).replace('aid', self.acctId)
-        response = requests.post(endpoint, verify=False, json=modPayload)
-        order = json.loads(response.text)
-        orderData = self.processOrderResponse(order)
-        print("Modification: ", orderData)
+        print(orderPayload)
+        for o in orderPayload['orders']:
+            print(o)
+            response = requests.post(endpoint, verify=False, json=o)
+            order = json.loads(response.text)
+            orderData = self.processOrderResponse(order)
+            print("Modification: ", orderData)
 
     def whatIfplaceOrder(self, orderJson):
         payload = {'orders': [orderJson]}

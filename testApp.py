@@ -687,9 +687,64 @@ def testPegToMidOrder(conid):
     print(payload)
     broker.placeOrder(payload)
 
+def testOCAOrder():
+    broker = Broker()
+    broker.isAuthenticated()
+    # Pre-flight request to not use a loop
+    broker.retrieveLiveOrders(filters=[])
+    broker.setAccountId()
+    instrument = Instrument('AMZN')
+    instrument.getContractsBySymbol()
+    instrument.assignConid()
+    contract = BaseContract(int(instrument.conid))
+    print(contract.__dict__)
+    randomid = random.randint(1, 999)
+    parentOrder = LimitOrder('BUY', 200, 1, 'DAY')
+    parentOrder.outsideRth = 1
+    parentOrder.__dict__.update(contract.__dict__)
+    coidString = f'My_very_unique_bracket_order_{randomid}'
+    parentOrder.cOID = coidString
+    print("Parent order: ", parentOrder.__dict__)
+    childOrder1 = TrailLimit('SELL', 200, 170, 1, 'GTC', '%', 10) 
+    childOrder1.parentId = coidString 
+    childOrder1.outsideRth = 1
+    childOrder1.isSingleGroup = True
+    childOrder1.__dict__.update(contract.__dict__)
+    print("Child order uno: ", childOrder1.__dict__)
+    childOrder2 = TrailStop('BUY', 200, 1, 'GTC', '%', 10)
+    childOrder2.parentId = coidString
+    childOrder2.outsideRth = 1
+    childOrder2.isSingleGroup = True
+    childOrder2.__dict__.update(contract.__dict__)
+    orderLst = [parentOrder.__dict__, childOrder1.__dict__, childOrder2.__dict__]
+    payload = {'orders': orderLst}
+    broker.placeOrder(payload)
+
+    time.sleep(2)
+    print(coidString)
+
+    orders = broker.retrieveLiveOrders(filters='')
+    for o in orders['orders']:
+        try:
+            if o['order_ref'] == coidString:
+                prntOrderId = o['orderId']
+                cld1orderId = prntOrderId + 1
+                cld2orderId = prntOrderId + 2
+                childOrder1.price = 177
+                childOrder1.size = 12
+                payload = {'orders': [childOrder1.__dict__]}
+                broker.modifySingleOrder(orderId=str(childOrder1), orderPayload=payload, price=175.45, size=12)
+            else:
+                print(coidString, o['order_ref'])
+        except KeyError:
+            continue
+    sys.exit()
+
 if __name__ == "__main__":
     # brokers.isAuthenticated check and broker.setAccountId should
     # be a part of broker.run() call
+    supressMessage('o10331,o163,o354')
+    testOCAOrder()
+    
 
-    testPegToMidOrder(265598)
     
