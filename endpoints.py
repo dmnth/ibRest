@@ -35,4 +35,5 @@ endpoints = {
         'tickle': base_url + '/tickle',
         'suppress': base_url +'/iserver/questions/suppress',
         'resetSuppress': base_url + '/iserver/questions/suppress/reset',
+        'scanner': base_url + "/iserver/scanner/run",
         }

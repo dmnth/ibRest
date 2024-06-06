@@ -13,6 +13,7 @@ from endpoints import endpoints
 from baseContract import Instrument, Contract
 from errorParser import errorHandler
 from json.decoder import JSONDecodeError
+from utils import createScanner
 
 requests.packages.urllib3.disable_warnings()
 
@@ -251,6 +252,10 @@ class Session():
         jsonData = json.loads(response.text)
         return jsonData
 
+class MarketDataManager():
+
+    def __init__(self):
+        self.param = None
 
 class Broker(Session, Account, OrderMonitor):
 
@@ -521,6 +526,15 @@ class Broker(Session, Account, OrderMonitor):
         except Exception as e:
             print(e)
             sys.exit()
+
+    def scannerRun(self, xml):
+        endpoint = endpoints['scanner']
+        print(endpoint)
+        scannerDict = createScanner(xml)
+        scannerDict['location'] = 'STK.US.MAJOR'
+        print(scannerDict)
+        response = requests.post(endpoint, json=scannerDict, verify=False)
+        print(response.text)
 
     def showWatchlists(self):
         self.account.getWatchlistis()

@@ -559,18 +559,19 @@ def testTrailLimitOrder(conid):
     broker = Broker()
     broker.isAuthenticated()
     broker.setAccountId()
-    inst = Instrument('EUR.USD')
+    inst = Instrument('AAPL')
     inst.getContractsBySymbol()
     inst.showFoundContracts()
     inst.assignConid()
     contract = BaseContract(int(inst.conid))
     order = TrailStop(action="SELL", totalQuantity=1, tif="DAY", 
-            stopPrice=1.0662, trailingType='amt', trailingAmount=0.002)
+            stopPrice=1.62, trailingType='amt', trailingAmount=0.02)
     print(contract.__dict__)
     print(order.__dict__)
     contract.__dict__.update(order.__dict__)
     print(contract.__dict__)
-    broker.placeOrder(contract.__dict__) 
+    broker.placeOrder({'orders': [contract.__dict__]}) 
+
 
 def testBracketOrder():
     broker = Broker()
@@ -740,11 +741,17 @@ def testOCAOrder():
             continue
     sys.exit()
 
+def testScanner(xml):
+    broker = Broker()
+    broker.isAuthenticated()
+    broker.setAccountId()
+    broker.scannerRun(xml)
+
+
 if __name__ == "__main__":
     # brokers.isAuthenticated check and broker.setAccountId should
     # be a part of broker.run() call
-    supressMessage('o10331,o163,o354')
-    testOCAOrder()
+    testScanner('topPercGainStkpriceAbove5.xml')
     
 
     
