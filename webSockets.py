@@ -75,6 +75,7 @@ def create_SMD_req(conId, args: str):
     args = args.split(',')
 #    msg = "smd+" + conId + '+' + '{"fields":["31","83"]}'
     msg = "smd+" + conId + '+' + json.dumps({"fields":args})
+    print(msg)
     return msg
 
 # Need to provide at least conId or symbol-sectype pair
@@ -165,9 +166,10 @@ async def sendMessages(msgList):
 
             rst = await websocket.recv()
             jsonData = json.loads(rst.decode())
+            
 
             if 'topic' in jsonData.keys():
-
+                
                 if jsonData['topic'] == 'str':
                     with open('tradesData.json', 'w') as file:
                         json.dump(jsonData, file, indent=4)
@@ -190,11 +192,6 @@ async def sendMessages(msgList):
 
                 if jsonData['topic'] == "sbd" and mktDepthUnsubscribed == False:
                     print(jsonData)
-#                    acctID = getAccountId()
-#                    msg = f"ubd+{acctID}"
-#                    messages.append(msg)
-#                    mktDepthUnsubscribed = True
-#                    print("Market depth data was unsubscribed")
                 
                 if jsonData['topic'].startswith('smd'):
                     timestamp = jsonData['_updated']
@@ -239,14 +236,13 @@ def liveOrderUpdates():
     asyncio.get_event_loop().run_until_complete(sendMessages(messages))
 
 def liveMarketData():
-    msg = create_SMD_req('54740723@OTCLNKECN', '6509,7308,7309,7310,7311')
+    msg = create_SMD_req('380912689', '6509,7308,7309,7310,7311')
     print(type(msg))
     messages = [msg]
     asyncio.get_event_loop().run_until_complete(sendMessages(messages))
 
 def tesLiveOrderUpdates():
     msg = create_SOR_req()
-    print(type(msg))
     messages = [msg]
     asyncio.get_event_loop().run_until_complete(sendMessages(messages))
 

@@ -84,6 +84,14 @@ class Instrument:
         if type(jsonData) != list:
             raise NoContractsFoundForSymbol
         self.json = jsonData
+    
+    def getContractByConid(self, conid):
+        endpoint = endpoints['secdefid']
+        print(endpoint)
+        endpoint = endpoint.replace('coid', conid)
+        response = requests.get(endpoint, verify=False)
+        print(response.text)
+
 
     def setStockContract(self):
         # Parses self.json for sectype STK, matches by company name

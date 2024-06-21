@@ -747,11 +747,19 @@ def testScanner(xml):
     broker.setAccountId()
     broker.scannerRun(xml)
 
+def testContractDetailsConid(conid):
+    broker = Broker()
+    broker.isAuthenticated()
+    broker.setAccountId()
+    contract = Instrument().getContractByConid(conid)
+    print(contract)
+# A thingy that resolves the contract by id and subscribes to market data
+
 
 if __name__ == "__main__":
     # brokers.isAuthenticated check and broker.setAccountId should
     # be a part of broker.run() call
-    testScanner('topPercGainStkpriceAbove5.xml')
+    testContractDetailsConid('380912689')
     
 
     
