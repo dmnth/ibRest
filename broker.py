@@ -531,7 +531,6 @@ class Broker(Session, Account, OrderMonitor):
         endpoint = endpoints['scanner']
         print(endpoint)
         scannerDict = createScanner(xml)
-        scannerDict['location'] = 'STK.US.MAJOR'
         print(scannerDict)
         response = requests.post(endpoint, json=scannerDict, verify=False)
         print(response.text)

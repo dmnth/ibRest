@@ -757,9 +757,7 @@ def testContractDetailsConid(conid):
 
 
 if __name__ == "__main__":
-    # brokers.isAuthenticated check and broker.setAccountId should
-    # be a part of broker.run() call
-    testContractDetailsConid('380912689')
+    testScanner('japaneseStock.xml')
     
 
     
