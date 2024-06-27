@@ -777,7 +777,8 @@ def testBondSecDefInfo():
     payload.sectype = "BOND"
     # :(
     payload.issuerId = issuerIds[0] 
-    payload.filters = "[{'maturityDate': 205008}]" 
+    payload.filters = "maturityDate:202508" 
+    payload.filters = "27:202402,25:3.375"
     print(payload.__dict__)
     resolver = Instrument()
     # Calls /iserver/secdef/info
