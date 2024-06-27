@@ -36,4 +36,5 @@ endpoints = {
         'suppress': base_url +'/iserver/questions/suppress',
         'resetSuppress': base_url + '/iserver/questions/suppress/reset',
         'scanner': base_url + "/iserver/scanner/run",
-        }
+        'bond_filter_info': base_url + "/iserver/secdef/bond-filters",
+        }  

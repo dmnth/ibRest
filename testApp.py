@@ -755,9 +755,39 @@ def testContractDetailsConid(conid):
     print(contract)
 # A thingy that resolves the contract by id and subscribes to market data
 
+def testBondSecDefInfo():
+    broker = Broker()
+    broker.isAuthenticated()
+    broker.setAccountId()
+    contract = Instrument()
+    contract.symbol = "GOOGL"
+    contract.getContractsBySymbol()
+    issuerIds = []
+    for cont in contract.json:
+        try:
+            if cont['secType'] == 'BOND':
+                issuerIds.append(cont['issuers'][0]['id'])
+        except KeyError:
+            continue
+    
+    # is there a 'description' parameter ? 
+    # GOOGL BOND 438162693
+    # Need to get issuerId first
+    payload = BaseContract(438162693)
+    payload.sectype = "BOND"
+    # :(
+    payload.issuerId = issuerIds[0] 
+    payload.filters = "[{'maturityDate': 205008}]" 
+    print(payload.__dict__)
+    resolver = Instrument()
+    # Calls /iserver/secdef/info
+    print(type(contract))
+    resolver.getBondFilterInfo(contract.symbol, issuerIds[0])
+    resolver.getContractDetails(payload)
+
 
 if __name__ == "__main__":
-    testScanner('japaneseStock.xml')
+    testBondSecDefInfo()
     
 
     

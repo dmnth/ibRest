@@ -44,6 +44,9 @@ class OptContract(FutContract):
         self.right = right
         selt.strike = strike
 
+class BondContract(Contract):
+    print('supo')
+
 class Instrument:
 
     def __init__(self, symbol='', companyName=''):
@@ -169,7 +172,18 @@ class Instrument:
         print(contract.__dict__)
         response = requests.get(endpoints['secDef_by_cid']
                 , params=contract.__dict__, verify=False)
-        self.json = json.loads(response.text)
+        print(response.text)
+#        self.json = json.loads(response.text)
+#        print(self.json)
+
+    def getBondFilterInfo(self, symbol, issuerId):
+        params = {
+                'symbol': symbol,
+                'issuerId': issuerId,
+                }
+        response = requests.get(endpoints['bond_filter_info'], params=params,
+                verify=False)
+        print(response.text)
 
     def getTradingSchedule(self,assetClass, symbol, exchange, exhchangeFilter=''):
         endpoint = endpoints['tradingSchedule']
